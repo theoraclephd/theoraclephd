@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>نظام الشكاوي المتقدم | تقارير Word و PDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { background-color: #0a0a0f; font-family: 'Tajawal', 'Segoe UI', sans-serif; }
+        .editable-table { border-collapse: separate; border-spacing: 0; width: 100%; display: block; overflow-x: auto; }
+        .editable-table th, .editable-table td { border-bottom: 1px solid #2d2d3a; padding: 10px 8px; text-align: center; transition: 0.1s; }
+        .editable-table th { background-color: #1e1e2a; color: #e2e2f0; position: sticky; top: 0; z-index: 10; }
+        .editable-table td { background-color: #181822; color: #cdcdff; cursor: pointer; }
+        .editable-table tr:hover td { background-color: #252535; }
+        .edit-input { background: #0a0a12; border: 1px solid #4f46e5; color: white; border-radius: 8px; padding: 4px 8px; width: 80px; text-align: center; }
+        .glass-card { background: rgba(22, 22, 32, 0.85); backdrop-filter: blur(2px); border: 1px solid #2c2c3a; border-radius: 28px; }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); transition: 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,70,229,0.4); }
+        .stat-number { font-family: 'Courier New', monospace; font-weight: 800; }
+        .severity-low { background: linear-gradient(145deg, #0f104b, #0a1636) !important; color: #b0f0b0; border-right: 4px solid #2ecc71; }
+        .severity-mid { background: linear-gradient(145deg, #b41b4e, #8e4a12) !important; color: #fff0c0; border-right: 4px solid #f39c12; }
+        .severity-high { background: linear-gradient(145deg, #c0392b, #da2713) !important; color: #ffe0e0; border-right: 4px solid #e74c3c; }
+        .severity-critical { background: linear-gradient(145deg, #7e0505, #5a0404) !important; color: #ffb3b3; border-right: 4px solid #ff0000; font-weight: bold; }
+        .badge-severity { display: inline-block; width: 12px; height: 12px; border-radius: 20px; margin-left: 5px; }
+        .report-btn { background: #e67e22; transition: 0.2s; }
+        .report-btn:hover { background: #d35400; transform: scale(1.02); }
+        .word-btn { background: #2b5797; transition: 0.2s; }
+        .word-btn:hover { background: #1e3a6f; transform: scale(1.02); }
+    </style>
+</head>
+<body class="text-gray-200 antialiased">
+
+<div class="max-w-[1600px] mx-auto px-4 py-6">
+    <!-- الهيدر مع السنوات والإجراءات -->
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4 no-print">
+        <div class="flex items-center gap-4">
+            <i class="fas fa-chart-pie text-4xl text-indigo-400"></i>
+            <div>
+                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">نظام الشكاوي المتقدم</h1>
+                <p class="text-gray-400 text-sm">خارطة حرارية | تحليل الضغط | تقارير Word و PDF احترافية</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <div class="bg-gray-800/60 rounded-xl px-3 py-2 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-indigo-300"></i>
+                <select id="yearSelector" class="bg-transparent border border-indigo-500 rounded-lg px-3 py-1.5 text-white font-semibold"></select>
+                <button id="addYearBtn" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg"><i class="fas fa-plus"></i> سنة</button>
+            </div>
+            <button id="resetYearBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl"><i class="fas fa-undo-alt"></i> إعادة تعيين</button>
+            <button id="exportExcelBtn" class="btn-primary px-4 py-2 rounded-xl"><i class="fas fa-file-excel"></i> Excel</button>
+            <button id="exportPdfBtn" class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 px-5 py-2 rounded-xl shadow-lg flex items-center gap-2"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button id="exportWordBtn" class="word-btn px-5 py-2 rounded-xl shadow-lg flex items-center gap-2"><i class="fab fa-microsoft"></i> Word (DOC)</button>
+            <button id="addDepartmentBtn" class="bg-amber-800 hover:bg-amber-700 px-4 py-2 rounded-xl"><i class="fas fa-plus-circle"></i> قسم</button>
+            <button id="addDateBtn" class="bg-cyan-800 hover:bg-cyan-700 px-4 py-2 rounded-xl"><i class="fas fa-calendar-plus"></i> يوم</button>
+        </div>
+    </div>
+
+    <!-- شريط دلالات الألوان -->
+    <div class="glass-card p-3 mb-6 flex flex-wrap justify-center gap-6 text-sm no-print">
+        <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-low"></div><span>🟢 منخفض (0-50)</span></div>
+        <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-mid"></div><span>🟠 متوسط (51-150)</span></div>
+        <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-high"></div><span>🔴 مرتفع (151-300)</span></div>
+        <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-critical"></div><span>🔥 حرج (>300)</span></div>
+    </div>
+
+    <!-- إحصائيات عليا + مجموع المجاميع -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="glass-card p-4 flex justify-between items-center"><div><i class="fas fa-building text-indigo-400"></i><p class="text-xs">الأقسام</p></div><span id="statDepartments" class="text-2xl font-bold">0</span></div>
+        <div class="glass-card p-4 flex justify-between items-center"><div><i class="fas fa-calendar-week text-emerald-400"></i><p class="text-xs">الأيام</p></div><span id="statDays" class="text-2xl font-bold">0</span></div>
+        <div class="glass-card p-4 flex justify-between items-center"><div><i class="fas fa-chart-line text-amber-400"></i><p class="text-xs">إجمالي الشكاوي</p></div><span id="statTotalComplaints" class="text-2xl font-bold">0</span></div>
+        <div class="glass-card p-4 flex justify-between items-center"><div><i class="fas fa-chart-simple text-rose-400"></i><p class="text-xs">أعلى يوم</p></div><span id="statPeakDay" class="text-sm font-bold">-</span></div>
+        <div class="glass-card p-4 flex justify-between items-center bg-indigo-950/40"><div><i class="fas fa-calculator text-purple-300"></i><p class="text-xs">مجموع المجاميع الكلي</p></div><span id="statGrandTotal" class="text-2xl font-extrabold text-purple-300">0</span></div>
+    </div>
+
+    <!-- فلتر الأقسام -->
+    <div class="glass-card p-3 mb-6 flex flex-wrap items-center gap-4 justify-between no-print">
+        <div class="flex items-center gap-2"><i class="fas fa-filter"></i><span class="font-semibold">تصفية القسم:</span></div>
+        <div class="flex flex-wrap gap-2" id="departmentFilterContainer"></div>
+        <button id="clearDeptFilter" class="bg-gray-700 text-sm px-3 py-1 rounded-full"><i class="fas fa-times-circle"></i> إلغاء الفلتر</button>
+    </div>
+
+    <!-- الرسوم البيانية والخارطة الحرارية -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-cyan-400"></i> الاتجاه اليومي (القسم المفلتر/الكلي)</h3><div id="trendChart" style="height: 300px;"></div></div>
+        <div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-simple ml-1 text-indigo-400"></i> إجمالي الأقسام</h3><div id="barChart" style="height: 300px;"></div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-fire ml-1 text-orange-400"></i> الخارطة الحرارية (Heatmap) - شدة الشكاوي</h3><div id="heatmapChart" style="height: 400px;"></div></div>
+        <div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-purple-400"></i> اتجاهات متعددة (اختر أقساماً)</h3><div id="multiTrendChart" style="height: 380px;"></div><div id="deptCheckboxContainer" class="flex flex-wrap gap-2 mt-3"></div></div>
+    </div>
+
+    <!-- جدول البيانات الكامل -->
+    <div class="glass-card p-2 overflow-x-auto" id="reportTableContainer">
+        <div class="flex justify-between p-2"><span><i class="fas fa-table ml-1"></i> جدول الشكاوي التفصيلي (نقر مزدوج لتعديل القيمة أو التاريخ)</span><span class="text-xs text-gray-400">الألوان تعكس مستوى الضغط تلقائياً</span></div>
+        <div class="overflow-x-auto max-h-[500px] overflow-y-auto rounded-2xl">
+            <table class="editable-table min-w-[900px]" id="complaintsTable">
+                <thead id="tableHeader"></thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFooter" style="background:#0f0f1a; font-weight:bold;"></tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="mt-4 text-center text-gray-500 text-xs no-print">✅ حفظ تلقائي لكل سنة | 📄 يمكنك تصدير تقرير Word أو PDF يحتوي جميع الرسوم البيانية والجداول والإحصائيات مع عناوين لكل شكل</div>
+</div>
+
+<script>
+    // ------------------------ البيانات الأساسية ----------------------------
+    const RAW_DEPTS = ["باب بغداد", "البهادلية", "السعدية", "الغدير", "الحر", "الخيرات", "الجدول الغربي", "الحسينية", "الهندية", "عين التمر"];
+    const RAW_VALUES = [[54,62,79,104,122,138,153,176,199,238,279,328,394,431,447,322,82],[30,38,41,40,65,80,85,90,145,220,235,270,317,335,310,110,35],[45,33,35,65,52,45,60,62,70,77,100,115,122,177,121,123,30],[15,18,17,17,19,19,21,23,26,24,26,23,28,26,26,25,10],[19,21,20,23,21,29,38,39,30,27,22,27,20,21,25,16,13],[11,10,12,18,13,20,32,39,38,32,40,43,43,47,21,10,4],[8,15,18,18,24,28,31,34,35,38,42,44,48,43,40,34,6],[20,15,24,26,30,30,25,40,50,80,85,95,120,150,150,75,20],[14,17,22,24,29,33,41,58,72,75,86,90,102,95,76,54,16],[1,2,3,4,4,3,2,1,1,0,3,3,2,3,2,1,2]];
+    function generateDateRangeForYear(year){ let start=new Date(year,7,10); let dates=[]; for(let i=0;i<17;i++){ let d=new Date(start); d.setDate(start.getDate()+i); dates.push(`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`); } return dates; }
+    
+    let yearlyData = {};
+    let currentYear = "2024";
+    let currentDeptFilter = null;
+    let selectedDeptsForMulti = new Set();
+    let charts = { trend: null, bar: null, multi: null, heat: null };
+
+    function persistAllYears() { localStorage.setItem("complaints_advanced_v3", JSON.stringify({ version:"3.1", yearlyData, currentYear })); }
+    function loadAllYears() { let raw=localStorage.getItem("complaints_advanced_v3"); if(raw){ try{ let s=JSON.parse(raw); if(s.yearlyData){ yearlyData=s.yearlyData; currentYear=s.currentYear||"2024"; return true; } }catch(e){} } return false; }
+    function initDefault(){ if(!yearlyData["2024"]) yearlyData["2024"]={ departments:[...RAW_DEPTS], dates:generateDateRangeForYear(2024), dataMatrix:RAW_VALUES.map(r=>[...r]) }; if(!yearlyData[currentYear]) currentYear="2024"; persistAllYears(); }
+    function getCurrent(){ return yearlyData[currentYear]; }
+    function saveCurrent(){ persistAllYears(); fullRefresh(); }
+
+    function addDateToCurrent(){ let data=getCurrent(); let last=new Date(data.dates[data.dates.length-1]); last.setDate(last.getDate()+1); let newDate=`${last.getFullYear()}-${(last.getMonth()+1).toString().padStart(2,'0')}-${last.getDate().toString().padStart(2,'0')}`; data.dates.push(newDate); data.dataMatrix.forEach(row=>row.push(0)); saveCurrent(); }
+    function addDepartmentToCurrent(){ let name=prompt("اسم القسم الجديد"); if(!name) return; let data=getCurrent(); if(data.departments.includes(name)){ alert("موجود"); return; } data.departments.push(name); data.dataMatrix.push(new Array(data.dates.length).fill(0)); saveCurrent(); }
+    function resetCurrentYear(){ if(!confirm(`إعادة تعيين سنة ${currentYear} إلى البيانات الأصلية؟`)) return; if(currentYear==="2024") yearlyData["2024"]={ departments:[...RAW_DEPTS], dates:generateDateRangeForYear(2024), dataMatrix:RAW_VALUES.map(r=>[...r]) }; else { let data=getCurrent(); let newMatrix=data.departments.map(()=>new Array(data.dates.length).fill(0)); data.dataMatrix=newMatrix; } saveCurrent(); }
+    function addNewYear(){ let ny=prompt("السنة الجديدة (مثال: 2025)", (parseInt(currentYear)+1).toString()); if(!ny||yearlyData[ny]){ alert("السنة موجودة أو غير صالحة"); return;} let copyFrom=confirm("نسخ بيانات من السنة الحالية؟")?currentYear:null; if(copyFrom){ let src=getCurrent(); yearlyData[ny]={ departments:[...src.departments], dates:[...src.dates], dataMatrix:src.dataMatrix.map(r=>[...r]) }; } else { yearlyData[ny]={ departments:[...RAW_DEPTS], dates:generateDateRangeForYear(parseInt(ny)), dataMatrix:RAW_DEPTS.map(()=>new Array(17).fill(0)) }; } currentYear=ny; saveCurrent(); rebuildYearSelector(); fullRefresh(); }
+    function rebuildYearSelector(){ let sel=document.getElementById('yearSelector'); sel.innerHTML=''; Object.keys(yearlyData).sort().forEach(y=>{ let opt=document.createElement('option'); opt.value=y; opt.textContent=`سنة ${y}`; if(y==currentYear) opt.selected=true; sel.appendChild(opt); }); }
+    function setCurrentYear(y){ if(yearlyData[y]){ currentYear=y; persistAllYears(); fullRefresh(); rebuildYearSelector(); } }
+
+    function getSeverityClass(val){ if(val<=50) return "severity-low"; if(val<=150) return "severity-mid"; if(val<=300) return "severity-high"; return "severity-critical"; }
+
+    function renderTable(){
+        let data=getCurrent(); if(!data) return;
+        let {departments, dates, dataMatrix}=data;
+        let thead=document.getElementById('tableHeader'); let tbody=document.getElementById('tableBody'); let tfoot=document.getElementById('tableFooter');
+        let headerHtml=`<tr><th class="sticky right-0 bg-[#1e1e2a]">القسم \\ التاريخ</th>`;
+        for(let i=0;i<dates.length;i++){ headerHtml+=`<th class="date-header-cell" data-dateidx="${i}" style="cursor:pointer; background:#1f2937;">${dates[i]} <i class="fas fa-pen-alt text-[10px] text-indigo-300"></i></th>`; }
+        headerHtml+=`<th class="sticky left-0">المجموع</th></tr>`;
+        thead.innerHTML=headerHtml;
+        
+        let bodyHtml='';
+        for(let r=0;r<departments.length;r++){
+            if(currentDeptFilter && departments[r]!==currentDeptFilter) continue;
+            let rowTotal=dataMatrix[r].reduce((a,b)=>a+b,0);
+            bodyHtml+=`<tr><td class="sticky right-0 bg-[#1a1a26] font-bold">${departments[r]}</td>`;
+            for(let c=0;c<dates.length;c++){
+                let val=dataMatrix[r][c];
+                let severityClass=getSeverityClass(val);
+                bodyHtml+=`<td class="editable-cell heatmap-cell ${severityClass}" data-row="${r}" data-col="${c}">${val}</td>`;
+            }
+            bodyHtml+=`<td class="sticky left-0 bg-[#1a1a26] text-indigo-300">${rowTotal}</td></tr>`;
+        }
+        tbody.innerHTML=bodyHtml;
+        
+        let dailySums=new Array(dates.length).fill(0);
+        for(let r=0;r<departments.length;r++) for(let c=0;c<dates.length;c++) dailySums[c]+=dataMatrix[r][c];
+        let grandTotal=dailySums.reduce((a,b)=>a+b,0);
+        let footerRow=`<tr class="bg-indigo-950/50 font-bold"><td class="sticky right-0">🏆 مجموع المجاميع</td>`;
+        for(let s of dailySums) footerRow+=`<td class="bg-indigo-900/30">${s}</td>`;
+        footerRow+=`<td class="sticky left-0 text-purple-300 text-xl">${grandTotal.toLocaleString()}</td></tr>`;
+        tfoot.innerHTML=footerRow;
+        document.getElementById('statGrandTotal').innerText=grandTotal.toLocaleString();
+        
+        attachCellEditEvents();
+        attachDateEditEvents();
+    }
+    
+    function attachCellEditEvents(){
+        document.querySelectorAll('.editable-cell').forEach(cell=>{
+            cell.removeEventListener('dblclick', cell._listener);
+            let handler=(e)=>{
+                let row=parseInt(cell.dataset.row); let col=parseInt(cell.dataset.col);
+                let data=getCurrent();
+                let input=document.createElement('input'); input.type='number'; input.value=data.dataMatrix[row][col]; input.classList.add('edit-input');
+                cell.innerHTML=''; cell.appendChild(input); input.focus();
+                let save=()=>{ let nv=parseInt(input.value); if(isNaN(nv)) nv=0; if(nv<0) nv=0; data.dataMatrix[row][col]=nv; saveCurrent(); };
+                input.addEventListener('blur', save); input.addEventListener('keypress', (e)=>{if(e.key==='Enter') save();});
+            };
+            cell.addEventListener('dblclick', handler);
+            cell._listener=handler;
+        });
+    }
+    function attachDateEditEvents(){
+        document.querySelectorAll('.date-header-cell').forEach(th=>{
+            th.removeEventListener('dblclick', th._dateListener);
+            let handler=()=>{
+                let idx=parseInt(th.dataset.dateidx);
+                let data=getCurrent();
+                let newDate=prompt("تعديل التاريخ (صيغة YYYY-MM-DD):", data.dates[idx]);
+                if(newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)){ data.dates[idx]=newDate; saveCurrent(); }
+                else if(newDate) alert("صيغة غير صالحة");
+            };
+            th.addEventListener('dblclick', handler);
+            th._dateListener=handler;
+        });
+    }
+    
+    function updateStats(){
+        let data=getCurrent(); if(!data) return;
+        let {departments, dates, dataMatrix}=data;
+        document.getElementById('statDepartments').innerText=departments.length;
+        document.getElementById('statDays').innerText=dates.length;
+        let total=0, maxDayVal=0, maxDayStr="";
+        for(let c=0;c<dates.length;c++){ let colSum=0; for(let r=0;r<departments.length;r++){ let v=dataMatrix[r][c]; total+=v; colSum+=v; } if(colSum>maxDayVal){ maxDayVal=colSum; maxDayStr=dates[c]; } }
+        document.getElementById('statTotalComplaints').innerText=total.toLocaleString();
+        document.getElementById('statPeakDay').innerHTML=maxDayVal>0?`${maxDayStr}<br><span class="text-xs">${maxDayVal}</span>`:"-";
+    }
+    
+    function renderCharts(){
+        let data=getCurrent(); if(!data) return;
+        let {departments, dates, dataMatrix}=data;
+        let filteredIndices=currentDeptFilter?[departments.indexOf(currentDeptFilter)]:null;
+        let dailyFilteredTotal=new Array(dates.length).fill(0);
+        if(filteredIndices && filteredIndices[0]>=0){ let r=filteredIndices[0]; for(let c=0;c<dates.length;c++) dailyFilteredTotal[c]=dataMatrix[r][c]; }
+        else for(let c=0;c<dates.length;c++) for(let r=0;r<departments.length;r++) dailyFilteredTotal[c]+=dataMatrix[r][c];
+        
+        if(charts.trend) charts.trend.dispose(); charts.trend=echarts.init(document.getElementById('trendChart'));
+        charts.trend.setOption({ tooltip:{trigger:'axis'}, xAxis:{type:'category', data:dates, axisLabel:{rotate:35}}, yAxis:{type:'value', name:'عدد الشكاوي'}, series:[{name:currentDeptFilter?`القسم: ${currentDeptFilter}`:'جميع الأقسام', data:dailyFilteredTotal, type:'line', smooth:true, lineStyle:{width:3, color:'#f97316'}, areaStyle:{opacity:0.2}, symbol:'circle', symbolSize:8}] });
+        
+        let deptTotals=departments.map((_,i)=>dataMatrix[i].reduce((a,b)=>a+b,0));
+        if(charts.bar) charts.bar.dispose(); charts.bar=echarts.init(document.getElementById('barChart'));
+        charts.bar.setOption({ tooltip:{trigger:'axis'}, xAxis:{type:'category', data:departments, axisLabel:{rotate:40, interval:0}}, yAxis:{type:'value'}, series:[{type:'bar', data:deptTotals, itemStyle:{borderRadius:[8,8,0,0], color:'#4f46e5'}, label:{show:true, position:'top'}}] });
+        
+        let heatData=[]; for(let i=0;i<departments.length;i++) for(let j=0;j<dates.length;j++) heatData.push([j,i,dataMatrix[i][j]]);
+        if(charts.heat) charts.heat.dispose(); charts.heat=echarts.init(document.getElementById('heatmapChart'));
+        charts.heat.setOption({ tooltip:{position:'top'}, xAxis:{type:'category', data:dates, axisLabel:{rotate:45}}, yAxis:{type:'category', data:departments}, visualMap:{min:0, max:Math.max(...heatData.map(d=>d[2]),100), calculable:true, inRange:{color:['#0f3b2c','#f5b042','#d95b0e','#a61b1b']}}, series:[{type:'heatmap', data:heatData, emphasis:{scale:true}}] });
+        
+        updateMultiTrend();
+    }
+    
+    function updateMultiTrend(){
+        let data=getCurrent(); if(!data||!charts.multi) return;
+        let {departments, dates, dataMatrix}=data;
+        let selected=Array.from(selectedDeptsForMulti).filter(d=>departments.includes(d));
+        if(charts.multi) charts.multi.dispose();
+        charts.multi=echarts.init(document.getElementById('multiTrendChart'));
+        if(selected.length===0){ charts.multi.setOption({ title:{text:'اختر أقساماً من القائمة أدناه', left:'center', textStyle:{color:'#aaa'}} }); return; }
+        let series=selected.map(dept=>{let idx=departments.indexOf(dept); return {name:dept, type:'line', data:dataMatrix[idx], smooth:true, symbol:'diamond'};});
+        charts.multi.setOption({ tooltip:{trigger:'axis'}, legend:{data:selected, textStyle:{color:'#ddd'}, orient:'vertical', right:10, top:20}, xAxis:{type:'category', data:dates, axisLabel:{rotate:30}}, yAxis:{type:'value'}, series });
+    }
+    
+    function renderDeptFilterButtons(){
+        let data=getCurrent(); if(!data) return;
+        let container=document.getElementById('departmentFilterContainer');
+        container.innerHTML=`<button class="filter-btn px-3 py-1 rounded-full ${!currentDeptFilter?'filter-active bg-indigo-600':''}" data-dept="">الكل</button>`;
+        data.departments.forEach(dept=>{
+            let btn=document.createElement('button'); btn.className=`filter-btn px-3 py-1 rounded-full ${currentDeptFilter===dept?'filter-active bg-indigo-600':'bg-gray-700'}`; btn.innerText=dept; btn.dataset.dept=dept;
+            btn.onclick=()=>{ currentDeptFilter=(currentDeptFilter===dept?null:dept); renderDeptFilterButtons(); fullRefresh(); };
+            container.appendChild(btn);
+        });
+        document.getElementById('clearDeptFilter').onclick=()=>{ currentDeptFilter=null; renderDeptFilterButtons(); fullRefresh(); };
+    }
+    
+    function renderMultiCheckboxes(){
+        let data=getCurrent(); if(!data) return;
+        let container=document.getElementById('deptCheckboxContainer');
+        container.innerHTML='';
+        if(selectedDeptsForMulti.size===0) data.departments.slice(0,4).forEach(d=>selectedDeptsForMulti.add(d));
+        data.departments.forEach(dept=>{
+            let label=document.createElement('label'); label.className='inline-flex items-center gap-1 bg-gray-800/50 px-2 py-1 rounded-full text-sm';
+            let cb=document.createElement('input'); cb.type='checkbox'; cb.checked=selectedDeptsForMulti.has(dept);
+            cb.onchange=(e)=>{ if(e.target.checked) selectedDeptsForMulti.add(dept); else selectedDeptsForMulti.delete(dept); updateMultiTrend(); };
+            let span=document.createElement('span'); span.innerText=dept;
+            label.appendChild(cb); label.appendChild(span); container.appendChild(label);
+        });
+    }
+    
+    function exportToExcel(){
+        let data=getCurrent(); if(!data) return;
+        let {departments, dates, dataMatrix}=data;
+        let excel=[['القسم/التاريخ',...dates,'مجموع القسم']];
+        for(let i=0;i<departments.length;i++) excel.push([departments[i],...dataMatrix[i],dataMatrix[i].reduce((a,b)=>a+b,0)]);
+        let dailyTot=new Array(dates.length).fill(0);
+        for(let r of dataMatrix) for(let c=0;c<dates.length;c++) dailyTot[c]+=r[c];
+        excel.push(['🏆 مجموع المجاميع',...dailyTot,dailyTot.reduce((a,b)=>a+b,0)]);
+        let ws=XLSX.utils.aoa_to_sheet(excel); let wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`شكاوي_${currentYear}`); XLSX.writeFile(wb,`تقرير_شكاوي_${currentYear}.xlsx`);
+    }
+    
+    async function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const element = document.createElement('div');
+        element.style.backgroundColor = 'white'; element.style.color = 'black'; element.style.padding = '20px'; element.style.fontFamily = 'Arial'; element.dir = 'rtl';
+        let data=getCurrent();
+        let titleHTML=`<h1 style="text-align:center;">تقرير الشكاوي السنوي - ${currentYear}</h1><p style="text-align:center;">${new Date().toLocaleString()}</p><hr/>`;
+        let statsHTML=`<div style="display:flex;justify-content:space-between;"><div><strong>الأقسام:</strong> ${data.departments.length}</div><div><strong>الأيام:</strong> ${data.dates.length}</div><div><strong>الإجمالي:</strong> ${document.getElementById('statTotalComplaints').innerText}</div><div><strong>المجموع الكلي:</strong> ${document.getElementById('statGrandTotal').innerText}</div></div><br/>`;
+        let chartsContainer=document.createElement('div'); chartsContainer.style.display='flex'; chartsContainer.style.flexWrap='wrap'; chartsContainer.style.gap='20px';
+        let chartIds=['trendChart','barChart','heatmapChart','multiTrendChart'];
+        let titles=['الشكل 1: الاتجاه اليومي للشكاوي','الشكل 2: إجمالي الشكاوي لكل قسم','الشكل 3: الخارطة الحرارية (شدة الضغط)','الشكل 4: اتجاهات الأقسام المتعددة'];
+        for(let idx=0; idx<chartIds.length; idx++){
+            let canvas=await html2canvas(document.getElementById(chartIds[idx]), { scale:2, backgroundColor:'#ffffff' });
+            let img=document.createElement('img'); img.src=canvas.toDataURL(); img.style.width='100%'; img.style.marginBottom='10px';
+            let caption=document.createElement('p'); caption.innerText=titles[idx]; caption.style.fontWeight='bold'; caption.style.textAlign='center';
+            let div=document.createElement('div'); div.style.width='100%'; div.appendChild(caption); div.appendChild(img);
+            chartsContainer.appendChild(div);
+        }
+        let tableClone=document.getElementById('complaintsTable').cloneNode(true);
+        tableClone.style.width='100%'; tableClone.style.borderCollapse='collapse';
+        element.innerHTML=''; element.appendChild(new DOMParser().parseFromString(titleHTML+statsHTML,'text/html').body.firstChild);
+        element.appendChild(chartsContainer); element.appendChild(tableClone);
+        document.body.appendChild(element);
+        const pdf=new jsPDF('landscape', 'mm', 'a4');
+        await html2canvas(element, { scale:2, logging:false }).then(canvas=>{
+            let imgData=canvas.toDataURL('image/png');
+            let imgWidth=280; let pageHeight=200; let imgHeight=(canvas.height*imgWidth)/canvas.width;
+            pdf.addImage(imgData,'PNG',10,10,imgWidth,imgHeight);
+            if(imgHeight>pageHeight) pdf.addPage();
+            pdf.save(`تقرير_شكاوي_${currentYear}.pdf`);
+        });
+        document.body.removeChild(element);
+    }
+    
+    // تصدير إلى Microsoft Word (ملف .doc) مع عناوين لكل شكل
+    async function exportToWord() {
+        let data=getCurrent();
+        // إنشاء نسخة HTML للتقرير
+        let docHtml = `<!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head><meta charset="UTF-8"><title>تقرير الشكاوي - ${currentYear}</title>
+        <style>
+            body { font-family: 'Arial', 'Times New Roman', sans-serif; margin: 30px; direction: rtl; }
+            h1 { color: #2c3e50; text-align: center; }
+            .stats { display: flex; justify-content: space-between; margin: 20px 0; flex-wrap: wrap; background: #f0f0f0; padding: 10px; border-radius: 10px; }
+            .stat-item { font-weight: bold; }
+            .chart-title { font-weight: bold; margin-top: 25px; margin-bottom: 5px; font-size: 1.2em; color: #1f4d7a; border-right: 5px solid #3498db; padding-right: 10px; }
+            img { max-width: 100%; height: auto; border: 1px solid #ccc; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #999; padding: 6px; text-align: center; }
+            th { background-color: #e2e2e2; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: gray; }
+        </style>
+        </head>
+        <body>
+        <h1>تقرير الشكاوي السنوي المتقدم - سنة ${currentYear}</h1>
+        <p style="text-align:center;">تم إنشاء التقرير: ${new Date().toLocaleString()}</p>
+        <div class="stats">
+            <div class="stat-item">📊 عدد الأقسام: ${data.departments.length}</div>
+            <div class="stat-item">📅 عدد الأيام المسجلة: ${data.dates.length}</div>
+            <div class="stat-item">💰 إجمالي الشكاوي: ${document.getElementById('statTotalComplaints').innerText}</div>
+            <div class="stat-item">🏆 مجموع المجاميع الكلي: ${document.getElementById('statGrandTotal').innerText}</div>
+            <div class="stat-item">📈 أعلى يوم: ${document.getElementById('statPeakDay').innerHTML.replace(/<br>.*/,'')}</div>
+        </div>
+        <hr/>`;
+        
+        // إضافة الرسوم البيانية كصور مع عناوين
+        let chartIds = ['trendChart', 'barChart', 'heatmapChart', 'multiTrendChart'];
+        let chartTitles = ['الاتجاه اليومي للشكاوي (جميع الأقسام أو المفلتر)', 'إجمالي الشكاوي لكل قسم', 'الخارطة الحرارية - شدة الضغط حسب الأقسام والأيام', 'اتجاهات الأقسام المتعددة (المختارة)'];
+        for(let i=0; i<chartIds.length; i++){
+            const canvas = await html2canvas(document.getElementById(chartIds[i]), { scale: 2, backgroundColor: '#ffffff' });
+            const imgData = canvas.toDataURL('image/png');
+            docHtml += `<div class="chart-title">الشكل ${i+1}: ${chartTitles[i]}</div>`;
+            docHtml += `<img src="${imgData}" style="width:100%; margin-bottom:20px;" />`;
+        }
+        
+        // نسخ الجدول مع تنسيق بسيط
+        let tableElem = document.getElementById('complaintsTable').cloneNode(true);
+        docHtml += `<div class="chart-title">الجدول التفصيلي للشكاوي (القيم والألوان تدل على شدة الضغط)</div>`;
+        docHtml += `<table border="1">${tableElem.outerHTML}</table>`;
+        docHtml += `<div class="footer">تم إنشاء التقرير بواسطة نظام الشكاوي المتقدم - البيانات قابلة للتعديل والحفظ التلقائي.</div>`;
+        docHtml += `</body></html>`;
+        
+        // إنشاء blob بصيغة application/msword
+        const blob = new Blob([docHtml], { type: 'application/msword' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = `تقرير_شكاوي_${currentYear}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+    
+    function fullRefresh(){
+        if(!getCurrent()) initDefault();
+        updateStats(); renderTable(); renderCharts(); renderDeptFilterButtons(); renderMultiCheckboxes();
+    }
+    
+    function bindEvents(){
+        document.getElementById('yearSelector').addEventListener('change',e=>setCurrentYear(e.target.value));
+        document.getElementById('addYearBtn').addEventListener('click',addNewYear);
+        document.getElementById('resetYearBtn').addEventListener('click',resetCurrentYear);
+        document.getElementById('exportExcelBtn').addEventListener('click',exportToExcel);
+        document.getElementById('exportPdfBtn').addEventListener('click',exportToPDF);
+        document.getElementById('exportWordBtn').addEventListener('click',exportToWord);
+        document.getElementById('addDepartmentBtn').addEventListener('click',addDepartmentToCurrent);
+        document.getElementById('addDateBtn').addEventListener('click',addDateToCurrent);
+    }
+    
+    (function init(){ if(!loadAllYears()) initDefault(); rebuildYearSelector(); fullRefresh(); bindEvents(); window.addEventListener('resize',()=>{ Object.values(charts).forEach(ch=>ch&&ch.resize()); }); })();
+</script>
+</body>
+</html>

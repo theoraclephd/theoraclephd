@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>مديرية مجاري كربلاء المقدسة | النظام المتكامل للشكاوي اعداد المبرمج الدكتور خالد الخفاجي</title>
+    <!-- Tailwind CSS + Font Awesome + ECharts + SheetJS + html2canvas + jspdf -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(145deg, #f8fafc 0%, #eef2f7 100%);
+            font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* تنسيق الصفحة الرئيسية للمديرية */
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f2b3d, #1b4a6e);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(2px);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #1e5a7d, #0f3b4f);
+            transition: 0.2s;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px -8px #0f3b4f;
+        }
+
+        /* نظام الشكاوي (داكن) - سيتم تفعيله بعد الضغط على الزر */
+        .dark-dashboard {
+            background-color: #0a0a0f;
+            color: #e2e2f0;
+        }
+
+        .dark-dashboard .glass-card {
+            background: rgba(22, 22, 32, 0.85);
+            border: 1px solid #2c2c3a;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .dashboard-styles .editable-table th {
+            background-color: #1e1e2a;
+            color: #e2e2f0;
+        }
+
+        .dashboard-styles .editable-table td {
+            background-color: #181822;
+            color: #cdcdff;
+        }
+
+        .severity-low {
+            background: linear-gradient(145deg, #0f4b2e, #0a3620) !important;
+            color: #b0f0b0;
+            border-right: 4px solid #2ecc71;
+        }
+
+        .severity-mid {
+            background: linear-gradient(145deg, #b45f1b, #8e4a12) !important;
+            color: #fff0c0;
+            border-right: 4px solid #f39c12;
+        }
+
+        .severity-high {
+            background: linear-gradient(145deg, #c0392b, #a82313) !important;
+            color: #ffe0e0;
+            border-right: 4px solid #e74c3c;
+        }
+
+        .severity-critical {
+            background: linear-gradient(145deg, #7e0505, #5a0404) !important;
+            color: #ffb3b3;
+            border-right: 4px solid #ff0000;
+            font-weight: bold;
+        }
+
+        .edit-input {
+            background: #0a0a12;
+            border: 1px solid #4f46e5;
+            color: white;
+            border-radius: 8px;
+            padding: 4px 8px;
+            width: 80px;
+            text-align: center;
+        }
+
+        .btn-login-dashboard {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+
+        .word-btn {
+            background: #2b5797;
+        }
+
+        .word-btn:hover {
+            background: #1e3a6f;
+        }
+
+        .filter-active {
+            background: #4f46e5 !important;
+        }
+
+        .transition-smooth {
+            transition: all 0.4s ease;
+        }
+
+        #dashboardContainer {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        #dashboardContainer.show {
+            display: block;
+            opacity: 1;
+        }
+
+        #mainPage {
+            transition: opacity 0.3s;
+        }
+
+        .nav-btn-active {
+            background-color: #1e5a7d;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- الصفحة الرئيسية لمديرية مجاري كربلاء -->
+    <div id="mainPage">
+        <!-- شريط تنقل علوي -->
+        <nav class="hero-gradient text-white shadow-lg py-4 px-6 flex flex-wrap justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-tint text-3xl"></i>
+                <span class="text-xl font-bold">مديرية مجاري كربلاء المقدسة</span>
+            </div>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-amber-200 transition">الرئيسية</a>
+                <a href="#about" class="hover:text-amber-200 transition">عن المديرية</a>
+                <a href="#services" class="hover:text-amber-200 transition">خدماتنا</a>
+                <button id="goToComplaintsBtn"
+                    class="bg-amber-600 hover:bg-amber-500 px-5 py-2 rounded-full flex items-center gap-2 shadow-md">
+                    <i class="fas fa-file-alt"></i> نظام الشكاوي المتقدم
+                </button>
+            </div>
+        </nav>
+
+        <!-- قسم الهيرو مع صور وخلفية -->
+        <div class="relative bg-cover bg-center h-[450px] flex items-center justify-center"
+            style="background-image: url('https://i.postimg.cc/MGBZphzp/3c54da09-be65-42b3-88ec-60bdf6456fb6.png'); background-blend-mode: overlay; background-color: rgba(0,0,0,0.5);">
+            <div class="text-center text-white px-4">
+                <h1 class="text-5xl font-extrabold drop-shadow-lg">مديرية مجاري كربلاء المقدسة
+                    اعداد المبرمج الدكتور
+                    خالد جواد الخفاجي
+                </h1>
+                <p class="text-xl mt-3 max-w-2xl mx-auto">نعمل من أجل بيئة نظيفة ومستدامة – خدمة الصرف الصحي وإدارة مياه
+                    الأمطار والشكاوي الفورية.</p>
+                <button id="heroBtn"
+                    class="mt-6 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-xl transition"><i
+                        class="fas fa-chart-line ml-2"></i> تقديم شكوى أو اقتراح</button>
+            </div>
+        </div>
+
+        <!-- قسم معلومات عن المديرية وصور -->
+        <div class="max-w-6xl mx-auto px-4 py-16" id="about">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 border-r-4 border-amber-500 pr-4">نبذة عن المديرية</h2>
+                    <p class="text-gray-700 mt-5 leading-relaxed">مديرية مجاري كربلاء المقدسة هي إحدى تشكيلات وزارة
+                        الإعمار والإسكان، تأسست لخدمة محافظة كربلاء في مجال شبكات الصرف الصحي ومحطات المعالجة. نسعى إلى
+                        تطوير البنية التحتية واستقبال شكاوي المواطنين والتعامل معها بكل شفافية وسرعة.</p>
+                    <p class="text-gray-700 mt-4">نحرص على تحديث الأنظمة وإدخال التكنولوجيا الحديثة في إدارة الشكاوي
+                        والمتابعة الميدانية، لضمان بيئة نظيفة وصحية لأهالي كربلاء والزائرين.</p>
+                    <div class="mt-6 flex gap-4">
+                        <div><i class="fas fa-hard-hat text-3xl text-amber-600"></i>
+                            <p class="text-sm">فرق صيانة</p>
+                        </div>
+                        <div><i class="fas fa-chart-line text-3xl text-amber-600"></i>
+                            <p class="text-sm">مراقبة لحظية</p>
+                        </div>
+                        <div><i class="fas fa-headset text-3xl text-amber-600"></i>
+                            <p class="text-sm">دعم 24/7</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="https://i.postimg.cc/L8NLVgP2/ca44be84-12e3-4b52-91cb-090066b00ceb.jpg" alt="محطة معالجة"
+                        class="rounded-2xl shadow-xl w-full h-48 object-cover">
+                    <img src="https://i.postimg.cc/WzGJqdjT/6ad3b9fe-7f66-4f98-b4ca-98b2bf0f3a0a.jpg" alt="شبكات الصرف"
+                        class="rounded-2xl shadow-xl w-full h-48 object-cover mt-6">
+                    <img src="https://i.postimg.cc/9fb9f5Ld/706336975-1468154581773287-5198289375176541854-n.jpg"
+                        alt="فريق عمل" class="rounded-2xl shadow-xl w-full h-48 object-cover">
+                    <img src="https://i.postimg.cc/mrPzNXRw/Whats-App-Image-2026-04-21-at-2-20-17-PM.jpg"
+                        alt="مشاريع جديدة" class="rounded-2xl shadow-xl w-full h-48 object-cover -mt-6">
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الخدمات -->
+        <div class="bg-gray-100 py-16" id="services">
+            <div class="max-w-6xl mx-auto px-4 text-center">
+                <h2 class="text-3xl font-bold text-gray-800">خدماتنا المقدمة</h2>
+                <div class="grid sm:grid-cols-3 gap-8 mt-12">
+                    <div class="glass-card p-6 text-center hover:scale-105 transition">
+                        <i class="fas fa-files text-5xl text-amber-600 mb-4"></i>
+                        <h3 class="text-xl font-bold">استقبال الشكاوي</h3>
+                        <p class="text-gray-600 mt-2">نظام إلكتروني متكامل لاستقبال شكاوي المواطنين ومتابعتها حتى الحل.
+                        </p>
+                    </div>
+                    <div class="glass-card p-6 text-center hover:scale-105 transition">
+                        <i class="fas fa-chart-pie text-5xl text-amber-600 mb-4"></i>
+                        <h3 class="text-xl font-bold">تقارير وتحليلات</h3>
+                        <p class="text-gray-600 mt-2">تحليل بيانات الشكاوي بخارطة حرارية ورسوم بيانية لتحسين الأداء.</p>
+                    </div>
+                    <div class="glass-card p-6 text-center hover:scale-105 transition">
+                        <i class="fas fa-tasks text-5xl text-amber-600 mb-4"></i>
+                        <h3 class="text-xl font-bold">متابعة المشاريع</h3>
+                        <p class="text-gray-600 mt-2">الإشراف على مشاريع الصرف الصحي وشبكات تصريف مياه الأمطار.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-gray-800 text-white text-center py-6">
+            <p>© 2025 مديرية مجاري كربلاء المقدسة - جميع الحقوق محفوظة</p>
+            <p class="text-sm text-gray-400">نظام الشكاوي التفاعلي | تقارير ذكية | خدمة مستدامة</p>
+        </footer>
+    </div>
+
+    <!-- حاوية عرض نظام الشكاوي (مخفية في البداية) -->
+    <div id="dashboardContainer" class="dark-dashboard"></div>
+
+    <script>
+        // ------------------------  نظام الشكاوي المتكامل (نفس الكود السابق مع بعض التعديلات) -------------------------
+        let dashboardHTML = ''; // سيتم ملؤها ديناميكياً
+
+        // بيانات نظام الشكاوي الأساسية
+        const RAW_DEPTS = ["باب بغداد", "البهادلية", "السعدية", "الغدير", "الحر", "الخيرات", "الجدول الغربي", "الحسينية", "الهندية", "عين التمر"];
+        const RAW_VALUES = [[54, 62, 79, 104, 122, 138, 153, 176, 199, 238, 279, 328, 394, 431, 447, 322, 82], [30, 38, 41, 40, 65, 80, 85, 90, 145, 220, 235, 270, 317, 335, 310, 110, 35], [45, 33, 35, 65, 52, 45, 60, 62, 70, 77, 100, 115, 122, 177, 121, 123, 30], [15, 18, 17, 17, 19, 19, 21, 23, 26, 24, 26, 23, 28, 26, 26, 25, 10], [19, 21, 20, 23, 21, 29, 38, 39, 30, 27, 22, 27, 20, 21, 25, 16, 13], [11, 10, 12, 18, 13, 20, 32, 39, 38, 32, 40, 43, 43, 47, 21, 10, 4], [8, 15, 18, 18, 24, 28, 31, 34, 35, 38, 42, 44, 48, 43, 40, 34, 6], [20, 15, 24, 26, 30, 30, 25, 40, 50, 80, 85, 95, 120, 150, 150, 75, 20], [14, 17, 22, 24, 29, 33, 41, 58, 72, 75, 86, 90, 102, 95, 76, 54, 16], [1, 2, 3, 4, 4, 3, 2, 1, 1, 0, 3, 3, 2, 3, 2, 1, 2]];
+        function generateDateRangeForYear(year) { let start = new Date(year, 7, 10); let dates = []; for (let i = 0; i < 17; i++) { let d = new Date(start); d.setDate(start.getDate() + i); dates.push(`${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`); } return dates; }
+
+        let yearlyData = {};
+        let currentYear = "2024";
+        let currentDeptFilter = null;
+        let selectedDeptsForMulti = new Set();
+        let charts = { trend: null, bar: null, multi: null, heat: null };
+
+        function persistAllYears() { localStorage.setItem("complaints_advanced_v3", JSON.stringify({ version: "3.1", yearlyData, currentYear })); }
+        function loadAllYears() { let raw = localStorage.getItem("complaints_advanced_v3"); if (raw) { try { let s = JSON.parse(raw); if (s.yearlyData) { yearlyData = s.yearlyData; currentYear = s.currentYear || "2024"; return true; } } catch (e) { } } return false; }
+        function initDefault() { if (!yearlyData["2024"]) yearlyData["2024"] = { departments: [...RAW_DEPTS], dates: generateDateRangeForYear(2024), dataMatrix: RAW_VALUES.map(r => [...r]) }; if (!yearlyData[currentYear]) currentYear = "2024"; persistAllYears(); }
+        function getCurrent() { return yearlyData[currentYear]; }
+        function saveCurrent() { persistAllYears(); fullRefreshDashboard(); }
+
+        function addDateToCurrent() { let data = getCurrent(); let last = new Date(data.dates[data.dates.length - 1]); last.setDate(last.getDate() + 1); let newDate = `${last.getFullYear()}-${(last.getMonth() + 1).toString().padStart(2, '0')}-${last.getDate().toString().padStart(2, '0')}`; data.dates.push(newDate); data.dataMatrix.forEach(row => row.push(0)); saveCurrent(); }
+        function addDepartmentToCurrent() { let name = prompt("اسم القسم الجديد"); if (!name) return; let data = getCurrent(); if (data.departments.includes(name)) { alert("موجود"); return; } data.departments.push(name); data.dataMatrix.push(new Array(data.dates.length).fill(0)); saveCurrent(); }
+        function resetCurrentYear() { if (!confirm(`إعادة تعيين سنة ${currentYear} إلى البيانات الأصلية؟`)) return; if (currentYear === "2024") yearlyData["2024"] = { departments: [...RAW_DEPTS], dates: generateDateRangeForYear(2024), dataMatrix: RAW_VALUES.map(r => [...r]) }; else { let data = getCurrent(); let newMatrix = data.departments.map(() => new Array(data.dates.length).fill(0)); data.dataMatrix = newMatrix; } saveCurrent(); }
+        function addNewYear() { let ny = prompt("السنة الجديدة (مثال: 2025)", (parseInt(currentYear) + 1).toString()); if (!ny || yearlyData[ny]) { alert("السنة موجودة أو غير صالحة"); return; } let copyFrom = confirm("نسخ بيانات من السنة الحالية؟") ? currentYear : null; if (copyFrom) { let src = getCurrent(); yearlyData[ny] = { departments: [...src.departments], dates: [...src.dates], dataMatrix: src.dataMatrix.map(r => [...r]) }; } else { yearlyData[ny] = { departments: [...RAW_DEPTS], dates: generateDateRangeForYear(parseInt(ny)), dataMatrix: RAW_DEPTS.map(() => new Array(17).fill(0)) }; } currentYear = ny; saveCurrent(); rebuildYearSelector(); fullRefreshDashboard(); }
+        function rebuildYearSelector() { let sel = document.getElementById('yearSelector'); if (sel) { sel.innerHTML = ''; Object.keys(yearlyData).sort().forEach(y => { let opt = document.createElement('option'); opt.value = y; opt.textContent = `سنة ${y}`; if (y == currentYear) opt.selected = true; sel.appendChild(opt); }); } }
+        function setCurrentYear(y) { if (yearlyData[y]) { currentYear = y; persistAllYears(); fullRefreshDashboard(); rebuildYearSelector(); } }
+        function getSeverityClass(val) { if (val <= 50) return "severity-low"; if (val <= 150) return "severity-mid"; if (val <= 300) return "severity-high"; return "severity-critical"; }
+
+        function attachCellEditEvents() {
+            document.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.removeEventListener('dblclick', cell._listener);
+                let handler = (e) => {
+                    let row = parseInt(cell.dataset.row); let col = parseInt(cell.dataset.col);
+                    let data = getCurrent();
+                    let input = document.createElement('input'); input.type = 'number'; input.value = data.dataMatrix[row][col]; input.classList.add('edit-input');
+                    cell.innerHTML = ''; cell.appendChild(input); input.focus();
+                    let save = () => { let nv = parseInt(input.value); if (isNaN(nv)) nv = 0; if (nv < 0) nv = 0; data.dataMatrix[row][col] = nv; saveCurrent(); };
+                    input.addEventListener('blur', save); input.addEventListener('keypress', (e) => { if (e.key === 'Enter') save(); });
+                };
+                cell.addEventListener('dblclick', handler);
+                cell._listener = handler;
+            });
+        }
+        function attachDateEditEvents() {
+            document.querySelectorAll('.date-header-cell').forEach(th => {
+                th.removeEventListener('dblclick', th._dateListener);
+                let handler = () => {
+                    let idx = parseInt(th.dataset.dateidx);
+                    let data = getCurrent();
+                    let newDate = prompt("تعديل التاريخ (صيغة YYYY-MM-DD):", data.dates[idx]);
+                    if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) { data.dates[idx] = newDate; saveCurrent(); }
+                    else if (newDate) alert("صيغة غير صالحة");
+                };
+                th.addEventListener('dblclick', handler);
+                th._dateListener = handler;
+            });
+        }
+
+        function renderTable() {
+            let data = getCurrent(); if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            let thead = document.getElementById('tableHeader'); let tbody = document.getElementById('tableBody'); let tfoot = document.getElementById('tableFooter');
+            if (!thead) return;
+            let headerHtml = `<tr><th class="sticky right-0 bg-[#1e1e2a]">القسم \\ التاريخ</th>`;
+            for (let i = 0; i < dates.length; i++) { headerHtml += `<th class="date-header-cell" data-dateidx="${i}" style="cursor:pointer; background:#1f2937;">${dates[i]} <i class="fas fa-pen-alt text-[10px] text-indigo-300"></i></th>`; }
+            headerHtml += `<th class="sticky left-0">المجموع</th>`;
+            thead.innerHTML = headerHtml;
+            let bodyHtml = '';
+            for (let r = 0; r < departments.length; r++) {
+                if (currentDeptFilter && departments[r] !== currentDeptFilter) continue;
+                let rowTotal = dataMatrix[r].reduce((a, b) => a + b, 0);
+                bodyHtml += `<tr><td class="sticky right-0 bg-[#1a1a26] font-bold">${departments[r]}</td>`;
+                for (let c = 0; c < dates.length; c++) {
+                    let val = dataMatrix[r][c];
+                    let severityClass = getSeverityClass(val);
+                    bodyHtml += `<td class="editable-cell heatmap-cell ${severityClass}" data-row="${r}" data-col="${c}">${val}</td>`;
+                }
+                bodyHtml += `<td class="sticky left-0 bg-[#1a1a26] text-indigo-300">${rowTotal}</td>`;
+            }
+            tbody.innerHTML = bodyHtml;
+            let dailySums = new Array(dates.length).fill(0);
+            for (let r = 0; r < departments.length; r++) for (let c = 0; c < dates.length; c++) dailySums[c] += dataMatrix[r][c];
+            let grandTotal = dailySums.reduce((a, b) => a + b, 0);
+            let footerRow = `<tr class="bg-indigo-950/50 font-bold"><td class="sticky right-0">🏆 مجموع المجاميع</td>`;
+            for (let s of dailySums) footerRow += `<td class="bg-indigo-900/30">${s}</td>`;
+            footerRow += `<td class="sticky left-0 text-purple-300 text-xl">${grandTotal.toLocaleString()}</td>`;
+            tfoot.innerHTML = footerRow;
+            document.getElementById('statGrandTotal').innerText = grandTotal.toLocaleString();
+            attachCellEditEvents(); attachDateEditEvents();
+        }
+
+        function updateStats() {
+            let data = getCurrent(); if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            document.getElementById('statDepartments').innerText = departments.length;
+            document.getElementById('statDays').innerText = dates.length;
+            let total = 0, maxDayVal = 0, maxDayStr = "";
+            for (let c = 0; c < dates.length; c++) { let colSum = 0; for (let r = 0; r < departments.length; r++) { let v = dataMatrix[r][c]; total += v; colSum += v; } if (colSum > maxDayVal) { maxDayVal = colSum; maxDayStr = dates[c]; } }
+            document.getElementById('statTotalComplaints').innerText = total.toLocaleString();
+            document.getElementById('statPeakDay').innerHTML = maxDayVal > 0 ? `${maxDayStr}<br><span class="text-xs">${maxDayVal}</span>` : "-";
+        }
+
+        function renderCharts() {
+            let data = getCurrent(); if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            let filteredIndices = currentDeptFilter ? [departments.indexOf(currentDeptFilter)] : null;
+            let dailyFilteredTotal = new Array(dates.length).fill(0);
+            if (filteredIndices && filteredIndices[0] >= 0) { let r = filteredIndices[0]; for (let c = 0; c < dates.length; c++) dailyFilteredTotal[c] = dataMatrix[r][c]; }
+            else for (let c = 0; c < dates.length; c++) for (let r = 0; r < departments.length; r++) dailyFilteredTotal[c] += dataMatrix[r][c];
+            if (charts.trend) charts.trend.dispose(); charts.trend = echarts.init(document.getElementById('trendChart'));
+            charts.trend.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: dates, axisLabel: { rotate: 35 } }, yAxis: { type: 'value', name: 'عدد الشكاوي' }, series: [{ name: currentDeptFilter ? `القسم: ${currentDeptFilter}` : 'جميع الأقسام', data: dailyFilteredTotal, type: 'line', smooth: true, lineStyle: { width: 3, color: '#f97316' }, areaStyle: { opacity: 0.2 }, symbol: 'circle' }] });
+            let deptTotals = departments.map((_, i) => dataMatrix[i].reduce((a, b) => a + b, 0));
+            if (charts.bar) charts.bar.dispose(); charts.bar = echarts.init(document.getElementById('barChart'));
+            charts.bar.setOption({ tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: departments, axisLabel: { rotate: 40, interval: 0 } }, yAxis: { type: 'value' }, series: [{ type: 'bar', data: deptTotals, itemStyle: { borderRadius: [8, 8, 0, 0], color: '#4f46e5' }, label: { show: true } }] });
+            let heatData = []; for (let i = 0; i < departments.length; i++) for (let j = 0; j < dates.length; j++) heatData.push([j, i, dataMatrix[i][j]]);
+            if (charts.heat) charts.heat.dispose(); charts.heat = echarts.init(document.getElementById('heatmapChart'));
+            charts.heat.setOption({ tooltip: { position: 'top' }, xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } }, yAxis: { type: 'category', data: departments }, visualMap: { min: 0, max: Math.max(...heatData.map(d => d[2]), 100), calculable: true, inRange: { color: ['#0f3b2c', '#f5b042', '#d95b0e', '#a61b1b'] } }, series: [{ type: 'heatmap', data: heatData }] });
+            updateMultiTrend();
+        }
+
+        function updateMultiTrend() {
+            let data = getCurrent(); if (!data || !charts.multi) return;
+            let { departments, dates, dataMatrix } = data;
+            let selected = Array.from(selectedDeptsForMulti).filter(d => departments.includes(d));
+            if (charts.multi) charts.multi.dispose();
+            charts.multi = echarts.init(document.getElementById('multiTrendChart'));
+            if (selected.length === 0) { charts.multi.setOption({ title: { text: 'اختر أقساماً من القائمة', left: 'center', textStyle: { color: '#aaa' } } }); return; }
+            let series = selected.map(dept => { let idx = departments.indexOf(dept); return { name: dept, type: 'line', data: dataMatrix[idx], smooth: true, symbol: 'diamond' }; });
+            charts.multi.setOption({ tooltip: { trigger: 'axis' }, legend: { data: selected, textStyle: { color: '#ddd' }, orient: 'vertical', right: 10, top: 20 }, xAxis: { type: 'category', data: dates, axisLabel: { rotate: 30 } }, yAxis: { type: 'value' }, series });
+        }
+
+        function renderDeptFilterButtons() {
+            let data = getCurrent(); if (!data) return;
+            let container = document.getElementById('departmentFilterContainer');
+            if (!container) return;
+            container.innerHTML = `<button class="filter-btn px-3 py-1 rounded-full ${!currentDeptFilter ? 'filter-active bg-indigo-600' : ''}" data-dept="">الكل</button>`;
+            data.departments.forEach(dept => {
+                let btn = document.createElement('button'); btn.className = `filter-btn px-3 py-1 rounded-full ${currentDeptFilter === dept ? 'filter-active bg-indigo-600' : 'bg-gray-700'}`; btn.innerText = dept;
+                btn.onclick = () => { currentDeptFilter = (currentDeptFilter === dept ? null : dept); renderDeptFilterButtons(); fullRefreshDashboard(); };
+                container.appendChild(btn);
+            });
+            document.getElementById('clearDeptFilter').onclick = () => { currentDeptFilter = null; renderDeptFilterButtons(); fullRefreshDashboard(); };
+        }
+
+        function renderMultiCheckboxes() {
+            let data = getCurrent(); if (!data) return;
+            let container = document.getElementById('deptCheckboxContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            if (selectedDeptsForMulti.size === 0) data.departments.slice(0, 4).forEach(d => selectedDeptsForMulti.add(d));
+            data.departments.forEach(dept => {
+                let label = document.createElement('label'); label.className = 'inline-flex items-center gap-1 bg-gray-800/50 px-2 py-1 rounded-full text-sm';
+                let cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = selectedDeptsForMulti.has(dept);
+                cb.onchange = (e) => { if (e.target.checked) selectedDeptsForMulti.add(dept); else selectedDeptsForMulti.delete(dept); updateMultiTrend(); };
+                let span = document.createElement('span'); span.innerText = dept;
+                label.appendChild(cb); label.appendChild(span); container.appendChild(label);
+            });
+        }
+
+        async function exportToWord() {
+            let data = getCurrent(); if (!data) return;
+            let docHtml = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير الشكاوي ${currentYear}</title><style>body{font-family:Arial;margin:30px;} .chart-title{font-weight:bold;margin-top:25px;color:#1f4d7a;} img{max-width:100%;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #999;padding:6px;}</style></head><body><h1>تقرير الشكاوي - سنة ${currentYear}</h1><p>${new Date().toLocaleString()}</p><div>الأقسام:${data.departments.length} | الأيام:${data.dates.length} | الإجمالي:${document.getElementById('statTotalComplaints').innerText} | المجموع الكلي:${document.getElementById('statGrandTotal').innerText}</div><hr/>`;
+            let chartIds = ['trendChart', 'barChart', 'heatmapChart', 'multiTrendChart'];
+            let titles = ['الاتجاه اليومي', 'إجمالي الأقسام', 'الخارطة الحرارية', 'اتجاهات متعددة'];
+            for (let i = 0; i < chartIds.length; i++) {
+                let canvas = await html2canvas(document.getElementById(chartIds[i]), { scale: 2, backgroundColor: '#fff' });
+                docHtml += `<div class="chart-title">الشكل ${i + 1}: ${titles[i]}</div><img src="${canvas.toDataURL()}" style="width:100%"/>`;
+            }
+            let tableClone = document.getElementById('complaintsTable').cloneNode(true);
+            docHtml += `<div class="chart-title">الجدول التفصيلي</div>${tableClone.outerHTML}</body></html>`;
+            let blob = new Blob([docHtml], { type: 'application/msword' });
+            let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `تقرير_شكاوي_${currentYear}.doc`; a.click(); URL.revokeObjectURL(a.href);
+        }
+
+        function fullRefreshDashboard() { if (!getCurrent()) initDefault(); updateStats(); renderTable(); renderCharts(); renderDeptFilterButtons(); renderMultiCheckboxes(); }
+
+        // بناء واجهة نظام الشكاوي داخل الحاوية
+        function buildDashboardHTML() {
+            return `
+            <div class="max-w-[1600px] mx-auto px-4 py-6">
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                    <div class="flex items-center gap-4">
+                        <i class="fas fa-chart-pie text-4xl text-indigo-400"></i>
+                        <div><h1 class="text-3xl font-extrabold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">نظام الشكاوي المتقدم</h1><p class="text-gray-400 text-sm">إدارة سنوية – خارطة حرارية – تقارير احترافية</p></div>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <div class="bg-gray-800/60 rounded-xl px-3 py-2 flex gap-2"><i class="fas fa-calendar-alt text-indigo-300"></i><select id="yearSelector" class="bg-transparent border border-indigo-500 rounded-lg px-3 py-1.5 text-white font-semibold"></select><button id="addYearBtn" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg"><i class="fas fa-plus"></i> سنة</button></div>
+                        <button id="resetYearBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl"><i class="fas fa-undo-alt"></i> إعادة تعيين</button>
+                        <button id="exportExcelBtn" class="btn-primary bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 rounded-xl"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button id="exportPdfBtn" class="bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 rounded-xl"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button id="exportWordBtn" class="word-btn px-4 py-2 rounded-xl"><i class="fab fa-microsoft"></i> Word</button>
+                        <button id="addDepartmentBtn" class="bg-amber-800 hover:bg-amber-700 px-4 py-2 rounded-xl"><i class="fas fa-plus-circle"></i> قسم</button>
+                        <button id="addDateBtn" class="bg-cyan-800 hover:bg-cyan-700 px-4 py-2 rounded-xl"><i class="fas fa-calendar-plus"></i> يوم</button>
+                        <button id="backToMainBtn" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl"><i class="fas fa-arrow-right"></i> العودة للرئيسية</button>
+                    </div>
+                </div>
+                <div class="glass-card p-3 mb-6 flex flex-wrap justify-center gap-6 text-sm"><div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-low"></div><span>🟢 منخفض (0-50)</span></div><div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-mid"></div><span>🟠 متوسط (51-150)</span></div><div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-high"></div><span>🔴 مرتفع (151-300)</span></div><div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-critical"></div><span>🔥 حرج (>300)</span></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">${['الأقسام', 'الأيام', 'إجمالي الشكاوي', 'أعلى يوم', 'مجموع المجاميع'].map((t, i) => `<div class="glass-card p-4 flex justify-between items-center"><div><i class="fas fa-${['building', 'calendar-week', 'chart-line', 'chart-simple', 'calculator'][i]} text-${['indigo', 'emerald', 'amber', 'rose', 'purple'][i]}-400"></i><p class="text-xs">${t}</p></div><span id="stat${['Departments', 'Days', 'TotalComplaints', 'PeakDay', 'GrandTotal'][i]}" class="text-2xl font-bold">0</span></div>`).join('')}</div>
+                <div class="glass-card p-3 mb-6 flex flex-wrap items-center gap-4 justify-between"><div class="flex gap-2"><i class="fas fa-filter"></i><span>تصفية القسم:</span></div><div id="departmentFilterContainer" class="flex flex-wrap gap-2"></div><button id="clearDeptFilter" class="bg-gray-700 text-sm px-3 py-1 rounded-full"><i class="fas fa-times-circle"></i> إلغاء الفلتر</button></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-cyan-400"></i> الاتجاه اليومي</h3><div id="trendChart" style="height:300px"></div></div><div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-simple ml-1 text-indigo-400"></i> إجمالي الأقسام</h3><div id="barChart" style="height:300px"></div></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-fire ml-1 text-orange-400"></i> الخارطة الحرارية</h3><div id="heatmapChart" style="height:400px"></div></div><div class="glass-card p-3"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-purple-400"></i> اتجاهات متعددة</h3><div id="multiTrendChart" style="height:380px"></div><div id="deptCheckboxContainer" class="flex flex-wrap gap-2 mt-3"></div></div></div>
+                <div class="glass-card p-2 overflow-x-auto"><div class="flex justify-between p-2"><span><i class="fas fa-table ml-1"></i> جدول الشكاوي (نقر مزدوج للتعديل)</span></div><div class="overflow-x-auto max-h-[500px]"><table class="editable-table min-w-[900px]" id="complaintsTable"><thead id="tableHeader"></thead><tbody id="tableBody"></tbody><tfoot id="tableFooter"></tfoot></table></div></div>
+                <div class="mt-4 text-center text-gray-500 text-xs">✅ حفظ تلقائي لكل سنة | 📄 تقارير Word, PDF, Excel</div>
+            </div>`;
+        }
+
+        // تهيئة نظام الشكاوي داخل dashboardContainer
+        function initDashboard() {
+            if (!loadAllYears()) initDefault();
+            rebuildYearSelector();
+            fullRefreshDashboard();
+            document.getElementById('yearSelector')?.addEventListener('change', e => setCurrentYear(e.target.value));
+            document.getElementById('addYearBtn')?.addEventListener('click', addNewYear);
+            document.getElementById('resetYearBtn')?.addEventListener('click', resetCurrentYear);
+            document.getElementById('exportExcelBtn')?.addEventListener('click', () => { let data = getCurrent(); if (!data) return; let excel = [['القسم/التاريخ', ...data.dates, 'مجموع القسم']]; for (let i = 0; i < data.departments.length; i++) excel.push([data.departments[i], ...data.dataMatrix[i], data.dataMatrix[i].reduce((a, b) => a + b, 0)]); let dailyTot = new Array(data.dates.length).fill(0); for (let r of data.dataMatrix) for (let c = 0; c < data.dates.length; c++) dailyTot[c] += r[c]; excel.push(['🏆 مجموع المجاميع', ...dailyTot, dailyTot.reduce((a, b) => a + b, 0)]); let ws = XLSX.utils.aoa_to_sheet(excel); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, `شكاوي_${currentYear}`); XLSX.writeFile(wb, `تقرير_شكاوي_${currentYear}.xlsx`); });
+            document.getElementById('exportPdfBtn')?.addEventListener('click', async () => { const { jsPDF } = window.jspdf; let elem = document.createElement('div'); elem.style.backgroundColor = 'white'; elem.style.padding = '20px'; let html = `<h1>تقرير الشكاوي ${currentYear}</h1><p>${new Date().toLocaleString()}</p><div>الأقسام:${getCurrent().departments.length} | الإجمالي:${document.getElementById('statTotalComplaints').innerText} | المجموع:${document.getElementById('statGrandTotal').innerText}</div><hr/>`; for (let id of ['trendChart', 'barChart', 'heatmapChart', 'multiTrendChart']) { let canvas = await html2canvas(document.getElementById(id), { scale: 2 }); html += `<img src="${canvas.toDataURL()}" style="width:100%;margin:20px 0"/>`; } elem.innerHTML = html; document.body.appendChild(elem); let pdf = new jsPDF('landscape', 'mm', 'a4'); let canvas = await html2canvas(elem, { scale: 2 }); pdf.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 0); pdf.save(`تقرير_${currentYear}.pdf`); document.body.removeChild(elem); });
+            document.getElementById('exportWordBtn')?.addEventListener('click', exportToWord);
+            document.getElementById('addDepartmentBtn')?.addEventListener('click', addDepartmentToCurrent);
+            document.getElementById('addDateBtn')?.addEventListener('click', addDateToCurrent);
+            document.getElementById('backToMainBtn')?.addEventListener('click', () => { document.getElementById('dashboardContainer').classList.remove('show'); document.getElementById('mainPage').style.display = 'block'; });
+            window.addEventListener('resize', () => { Object.values(charts).forEach(ch => ch && ch.resize()); });
+        }
+
+        // ربط أزرار الانتقال لنظام الشكاوي
+        function showComplaintsSystem() {
+            const container = document.getElementById('dashboardContainer');
+            if (container.innerHTML.trim() === '') {
+                container.innerHTML = buildDashboardHTML();
+                initDashboard();
+            }
+            document.getElementById('mainPage').style.display = 'none';
+            container.classList.add('show');
+        }
+
+        document.getElementById('goToComplaintsBtn')?.addEventListener('click', showComplaintsSystem);
+        document.getElementById('heroBtn')?.addEventListener('click', showComplaintsSystem);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>نظام الشكاوي المتقدم | مديرية مجاري كربلاء</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js">
+    </script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-dark2: #12121a;
+            --bg-light: #f1f5f9;
+            --text-dark: #e2e2f0;
+            --text-light: #1e293b;
+            --card-dark-bg: rgba(22, 22, 32, 0.85);
+            --card-light-bg: rgba(255, 255, 255, 0.95);
+            --border-dark: #2c2c3a;
+            --border-light: #cbd5e1;
+        }
+
+        body {
+            transition: background-color 0.35s, color 0.25s;
+            font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* الوضع الداكن */
+        body.dark {
+            background: linear-gradient(145deg, #0a0a0f 0%, #12121a 100%);
+            color: #e2e2f0;
+        }
+        body.dark .glass-card {
+            background: rgba(22, 22, 32, 0.85);
+            backdrop-filter: blur(4px);
+            border: 1px solid #2c2c3a;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+        }
+        body.dark .editable-table th {
+            background-color: #1e1e2a;
+            color: #e2e2f0;
+        }
+        body.dark .editable-table td {
+            background-color: #181822;
+            color: #cdcdff;
+            border-bottom: 1px solid #2d2d3a;
+        }
+        body.dark .gauge-bar {
+            background: #2d2d3a;
+        }
+        body.dark .login-card {
+            background: rgba(22, 22, 32, 0.95);
+            border: 1px solid #4f46e5;
+        }
+        body.dark input[type="text"],
+        body.dark input[type="password"],
+        body.dark select {
+            background-color: #1a1a26;
+            color: #e2e2f0;
+            border-color: #3a3a50;
+        }
+        body.dark .edit-input {
+            background: #0a0a12;
+            border: 1px solid #4f46e5;
+            color: white;
+        }
+        body.dark .filter-btn:not(.filter-active) {
+            background: #2a2a3a;
+            color: #ccc;
+        }
+
+        /* الوضع الفاتح */
+        body.light {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        body.light .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        body.light .editable-table th {
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+        body.light .editable-table td {
+            background-color: #f8fafc;
+            color: #1e293b;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        body.light .gauge-bar {
+            background: #cbd5e1;
+        }
+        body.light .login-card {
+            background: white;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+        }
+        body.light input[type="text"],
+        body.light input[type="password"],
+        body.light select {
+            background-color: #fff;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        body.light .edit-input {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #4f46e5;
+        }
+        body.light .filter-btn:not(.filter-active) {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        /* مستويات الشدة - ألوان ثابتة دلالية */
+        .severity-low {
+            background: linear-gradient(145deg, #0f4b2e, #0a3620) !important;
+            color: #b0f0b0;
+            border-right: 4px solid #2ecc71;
+        }
+        .severity-mid {
+            background: linear-gradient(145deg, #b45f1b, #8e4a12) !important;
+            color: #fff0c0;
+            border-right: 4px solid #f39c12;
+        }
+        .severity-high {
+            background: linear-gradient(145deg, #c0392b, #a82313) !important;
+            color: #ffe0e0;
+            border-right: 4px solid #e74c3c;
+        }
+        .severity-critical {
+            background: linear-gradient(145deg, #7e0505, #5a0404) !important;
+            color: #ffb3b3;
+            border-right: 4px solid #ff0000;
+            font-weight: bold;
+        }
+        body.light .severity-low {
+            background: #d4edda !important;
+            color: #155724;
+            border-right: 4px solid #2ecc71;
+        }
+        body.light .severity-mid {
+            background: #fff3cd !important;
+            color: #856404;
+            border-right: 4px solid #f39c12;
+        }
+        body.light .severity-high {
+            background: #f8d7da !important;
+            color: #721c24;
+            border-right: 4px solid #e74c3c;
+        }
+        body.light .severity-critical {
+            background: #f5c6cb !important;
+            color: #4a0008;
+            border-right: 4px solid #ff0000;
+            font-weight: bold;
+        }
+
+        .edit-input {
+            border-radius: 8px;
+            padding: 4px 8px;
+            width: 80px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            transition: 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+        .word-btn {
+            background: #2b5797;
+            transition: 0.2s;
+        }
+        .word-btn:hover {
+            background: #1e3a6f;
+            transform: scale(1.02);
+        }
+        .filter-active {
+            background: #4f46e5 !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        .gauge-bar {
+            height: 8px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .gauge-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 20px;
+        }
+        .login-card {
+            max-width: 450px;
+            width: 90%;
+            border-radius: 1.5rem;
+        }
+        .theme-toggle-btn {
+            cursor: pointer;
+            transition: all 0.25s;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        body.dark .theme-toggle-btn {
+            background: #374151;
+            color: #fbbf24;
+            border: 1px solid #4b5563;
+        }
+        body.light .theme-toggle-btn {
+            background: #e2e8f0;
+            color: #1e40af;
+            border: 1px solid #94a3b8;
+        }
+        .theme-toggle-btn:hover {
+            transform: scale(1.04);
+        }
+
+        .delete-icon {
+            cursor: pointer;
+            transition: transform 0.15s, color 0.15s;
+            font-size: 0.85rem;
+        }
+        .delete-icon:hover {
+            transform: scale(1.3);
+            color: #ff4444 !important;
+        }
+
+        /* تنسيق الجدول */
+        .editable-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .editable-table th,
+        .editable-table td {
+            padding: 8px 10px;
+            text-align: center;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        .editable-table th {
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .sticky-right {
+            position: sticky;
+            right: 0;
+            z-index: 3;
+        }
+        .sticky-left {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+        }
+        body.dark .sticky-right,
+        body.dark .sticky-left {
+            background-color: #1e1e2a;
+        }
+        body.light .sticky-right,
+        body.light .sticky-left {
+            background-color: #e2e8f0;
+        }
+        body.dark td.sticky-right,
+        body.dark td.sticky-left {
+            background-color: #181822;
+        }
+        body.light td.sticky-right,
+        body.light td.sticky-left {
+            background-color: #f8fafc;
+        }
+        .date-header-cell {
+            cursor: pointer;
+            position: relative;
+        }
+        .date-header-cell .delete-date-icon {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .date-header-cell:hover .delete-date-icon {
+            opacity: 1;
+        }
+
+        /* ===================== تحسينات جمالية وتفاعلية جديدة ===================== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 999px;
+            filter: blur(80px);
+            opacity: 0.28;
+            z-index: -1;
+            pointer-events: none;
+            animation: floatOrb 13s ease-in-out infinite alternate;
+        }
+
+        body::before {
+            top: -120px;
+            right: -90px;
+            background: #4f46e5;
+        }
+
+        body::after {
+            bottom: -150px;
+            left: -90px;
+            background: #06b6d4;
+            animation-delay: 1.7s;
+        }
+
+        body.light::before {
+            opacity: 0.18;
+            background: #818cf8;
+        }
+
+        body.light::after {
+            opacity: 0.16;
+            background: #38bdf8;
+        }
+
+        @keyframes floatOrb {
+            from { transform: translate3d(0, 0, 0) scale(1); }
+            to { transform: translate3d(-35px, 25px, 0) scale(1.12); }
+        }
+
+        @keyframes shimmerMove {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        @keyframes softPulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+            50% { box-shadow: 0 0 26px rgba(239, 68, 68, 0.45); }
+        }
+
+        @keyframes slideInToast {
+            from { opacity: 0; transform: translateX(30px) scale(0.98); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.28), transparent 32%),
+                radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.20), transparent 28%),
+                linear-gradient(135deg, rgba(17, 24, 39, 0.90), rgba(49, 46, 129, 0.72));
+            border: 1px solid rgba(129, 140, 248, 0.42);
+        }
+
+        body.light .hero-card {
+            background:
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.20), transparent 32%),
+                radial-gradient(circle at 85% 15%, rgba(14, 165, 233, 0.16), transparent 28%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(224, 231, 255, 0.94));
+        }
+
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: linear-gradient(to bottom, black, transparent);
+            pointer-events: none;
+        }
+
+        .shimmer-title {
+            background: linear-gradient(90deg, #c7d2fe, #ffffff, #67e8f9, #c7d2fe);
+            background-size: 220% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmerMove 4.5s linear infinite;
+        }
+
+        body.light .shimmer-title {
+            background: linear-gradient(90deg, #312e81, #4f46e5, #0891b2, #312e81);
+            background-size: 220% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card,
+        .glass-card {
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+
+        .stat-card:hover,
+        .glass-card:hover {
+            transform: translateY(-4px);
+        }
+
+        body.dark .stat-card:hover,
+        body.dark .glass-card:hover {
+            border-color: rgba(129, 140, 248, 0.55);
+            box-shadow: 0 24px 45px -18px rgba(79, 70, 229, 0.45);
+        }
+
+        body.light .stat-card:hover,
+        body.light .glass-card:hover {
+            border-color: rgba(79, 70, 229, 0.25);
+            box-shadow: 0 18px 35px -18px rgba(79, 70, 229, 0.28);
+        }
+
+        .metric-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.42rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.10);
+            backdrop-filter: blur(8px);
+        }
+
+        body.light .metric-chip {
+            border-color: rgba(79,70,229,0.18);
+            background: rgba(255,255,255,0.74);
+        }
+
+        .smart-ticker {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(79, 70, 229, 0.20);
+        }
+
+        .smart-ticker::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -45%;
+            width: 45%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+            animation: shimmerMove 5.5s linear infinite;
+        }
+
+        .insight-card {
+            border-radius: 1.2rem;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            left: -40px;
+            top: -40px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .quick-control {
+            transition: 0.18s ease;
+        }
+
+        .quick-control:focus {
+            outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.22);
+        }
+
+        .floating-actions {
+            position: fixed;
+            bottom: 22px;
+            left: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            z-index: 50;
+        }
+
+        .floating-action-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            box-shadow: 0 12px 28px rgba(79,70,229,0.35);
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+
+        .floating-action-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 18px 34px rgba(79,70,229,0.46);
+        }
+
+        .toast {
+            animation: slideInToast 0.28s ease both;
+            border-radius: 1rem;
+            padding: 0.85rem 1rem;
+            color: white;
+            box-shadow: 0 18px 38px rgba(0,0,0,0.25);
+            min-width: 230px;
+            border: 1px solid rgba(255,255,255,0.18);
+            backdrop-filter: blur(12px);
+        }
+
+        .toast.success { background: linear-gradient(135deg, rgba(5,150,105,.92), rgba(16,185,129,.92)); }
+        .toast.info { background: linear-gradient(135deg, rgba(79,70,229,.94), rgba(6,182,212,.90)); }
+        .toast.warning { background: linear-gradient(135deg, rgba(217,119,6,.94), rgba(245,158,11,.90)); }
+        .toast.danger { background: linear-gradient(135deg, rgba(185,28,28,.94), rgba(239,68,68,.90)); }
+
+        .severity-critical {
+            animation: softPulse 2.2s ease-in-out infinite;
+        }
+
+        .editable-table tbody tr {
+            transition: transform 0.16s ease, filter 0.16s ease;
+        }
+
+        .editable-table tbody tr:hover {
+            transform: scale(1.006);
+            filter: brightness(1.06);
+        }
+
+        .live-clock {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.4px;
+        }
+
+        .mini-progress {
+            height: 6px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(148,163,184,.25);
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #22c55e, #f59e0b, #ef4444);
+        }
+
+        @media (max-width: 768px) {
+            .floating-actions { bottom: 14px; left: 14px; }
+            .hero-card { padding: 1rem !important; }
+        }
+
+
+
+        /* ===================== Ultra Visual Edition: أشكال ورسوم إضافية ===================== */
+        .decor-shapes {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+        .geo-shape {
+            position: absolute;
+            opacity: .18;
+            filter: blur(.2px);
+            animation: geoFloat 16s ease-in-out infinite alternate;
+        }
+        .geo-ring {
+            width: 150px;
+            height: 150px;
+            border: 16px solid rgba(99, 102, 241, .38);
+            border-radius: 999px;
+            right: 7%;
+            top: 19%;
+        }
+        .geo-square {
+            width: 115px;
+            height: 115px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(6,182,212,.55), rgba(79,70,229,.35));
+            transform: rotate(22deg);
+            left: 9%;
+            top: 28%;
+            animation-delay: 1.4s;
+        }
+        .geo-triangle {
+            width: 0;
+            height: 0;
+            border-left: 70px solid transparent;
+            border-right: 70px solid transparent;
+            border-bottom: 120px solid rgba(245, 158, 11, .28);
+            right: 18%;
+            bottom: 8%;
+            animation-delay: 2.1s;
+        }
+        .geo-dots {
+            width: 190px;
+            height: 190px;
+            left: 17%;
+            bottom: 11%;
+            background-image: radial-gradient(rgba(255,255,255,.36) 2px, transparent 2px);
+            background-size: 18px 18px;
+            animation-delay: 2.8s;
+        }
+        body.light .geo-dots { background-image: radial-gradient(rgba(79,70,229,.28) 2px, transparent 2px); }
+        body.light .geo-ring { border-color: rgba(79,70,229,.25); }
+        body.light .geo-square { opacity: .15; }
+        body.light .geo-triangle { opacity: .14; }
+        @keyframes geoFloat {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            100% { transform: translateY(-34px) rotate(16deg) scale(1.08); }
+        }
+
+        .premium-ribbon {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, rgba(79,70,229,.20), rgba(6,182,212,.14), rgba(245,158,11,.12));
+            border: 1px solid rgba(129,140,248,.28);
+        }
+        .premium-ribbon::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 15%, rgba(255,255,255,.14) 35%, transparent 58%);
+            transform: translateX(110%);
+            animation: ribbonLight 6.5s linear infinite;
+        }
+        @keyframes ribbonLight { to { transform: translateX(-110%); } }
+
+        .wave-divider {
+            margin: -6px 0 18px;
+            opacity: .78;
+        }
+        .shape-board {
+            position: relative;
+            min-height: 335px;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid rgba(148,163,184,.22);
+            background:
+                radial-gradient(circle at 50% 50%, rgba(79,70,229,.18), transparent 28%),
+                radial-gradient(circle at 18% 18%, rgba(6,182,212,.16), transparent 25%),
+                radial-gradient(circle at 82% 18%, rgba(245,158,11,.14), transparent 22%);
+        }
+        .shape-board::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+            background-size: 26px 26px;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
+        body.light .shape-board::before {
+            background-image: linear-gradient(rgba(79,70,229,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(79,70,229,.075) 1px, transparent 1px);
+        }
+        .shape-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 155px;
+            height: 155px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(79,70,229,.92), rgba(6,182,212,.82));
+            color: #fff;
+            box-shadow: 0 0 55px rgba(79,70,229,.45);
+            border: 1px solid rgba(255,255,255,.32);
+            z-index: 2;
+        }
+        .shape-bubble {
+            --size: 80px;
+            position: absolute;
+            width: var(--size);
+            height: var(--size);
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: .45rem;
+            font-size: .72rem;
+            font-weight: 900;
+            color: #fff;
+            background: linear-gradient(135deg, rgba(99,102,241,.92), rgba(168,85,247,.84));
+            border: 1px solid rgba(255,255,255,.26);
+            box-shadow: 0 18px 32px rgba(0,0,0,.25);
+            animation: bubblePulse 5s ease-in-out infinite;
+            z-index: 3;
+        }
+        .shape-bubble small { display:block; font-size:.66rem; opacity:.88; margin-top:.12rem; }
+        .shape-bubble.critical { background: linear-gradient(135deg, rgba(220,38,38,.96), rgba(245,158,11,.88)); }
+        .shape-bubble.high { background: linear-gradient(135deg, rgba(244,63,94,.94), rgba(168,85,247,.80)); }
+        .shape-bubble.mid { background: linear-gradient(135deg, rgba(245,158,11,.94), rgba(14,165,233,.78)); }
+        .shape-bubble.low { background: linear-gradient(135deg, rgba(16,185,129,.92), rgba(6,182,212,.78)); }
+        @keyframes bubblePulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.035); } }
+
+        .podium-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 128px;
+            border-radius: 1.3rem;
+            padding: 1rem;
+            border: 1px solid rgba(255,255,255,.15);
+        }
+        .podium-card::before {
+            content: "";
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 999px;
+            left: -52px;
+            top: -55px;
+            background: rgba(255,255,255,.14);
+        }
+        .podium-rank {
+            width: 46px;
+            height: 46px;
+            border-radius: 1rem;
+            display: grid;
+            place-items: center;
+            background: rgba(255,255,255,.18);
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: .65rem;
+        }
+        .day-pill {
+            border-radius: 1rem;
+            padding: .72rem .35rem;
+            text-align: center;
+            font-size: .72rem;
+            font-weight: 900;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.20);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+            transition: .2s ease;
+        }
+        .day-pill:hover { transform: translateY(-4px) scale(1.02); }
+        .day-pill small { display:block; opacity:.86; font-size:.62rem; margin-top:.15rem; }
+
+        .section-title-fancy {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            font-weight: 900;
+            font-size: 1.08rem;
+            margin-bottom: .85rem;
+        }
+        .section-title-fancy .title-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: .9rem;
+            color: #fff;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            box-shadow: 0 12px 24px rgba(79,70,229,.25);
+        }
+
+        .report-card-mini {
+            border-radius: 1.1rem;
+            padding: .9rem;
+            border: 1px solid rgba(148,163,184,.20);
+            background: rgba(255,255,255,.06);
+        }
+        body.light .report-card-mini { background: rgba(255,255,255,.72); }
+
+        @media print {
+            .floating-actions, .decor-shapes, .theme-toggle-btn, #logoutBtn { display:none !important; }
+            body { background:#fff !important; color:#000 !important; }
+            .glass-card, .hero-card { box-shadow:none !important; border:1px solid #ddd !important; }
+        }
+
+    </style>
+</head>
+<body class="dark">
+    <div class="decor-shapes" aria-hidden="true">
+        <span class="geo-shape geo-ring"></span>
+        <span class="geo-shape geo-square"></span>
+        <span class="geo-shape geo-triangle"></span>
+        <span class="geo-shape geo-dots"></span>
+    </div>
+
+    <div id="toastContainer" class="fixed top-5 left-5 z-[9999] flex flex-col gap-3"></div>
+
+
+    <!-- صفحة تسجيل الدخول -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+        <div class="login-card rounded-2xl p-8 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-indigo-500/20 blur-2xl"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-cyan-500/20 blur-2xl"></div>
+            <div class="mb-6">
+                <i class="fas fa-water text-5xl text-indigo-500 mb-3"></i>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">نظام الشكاوي المتقدم</h2>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">مديرية مجاري كربلاء المقدسة</p>
+            </div>
+            <div class="space-y-5 text-right">
+                <div>
+                    <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm"><i class="fas fa-user ml-1"></i> اسم المستخدم</label>
+                    <input type="text" id="username" class="w-full rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="admin">
+                </div>
+                <div>
+                    <label class="block text-gray-700 dark:text-gray-300 mb-1 text-sm"><i class="fas fa-lock ml-1"></i> كلمة المرور</label>
+                    <input type="password" id="password" class="w-full rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••">
+                </div>
+                <button id="loginBtn" class="btn-primary w-full py-3 rounded-xl text-white font-bold text-lg transition"><i class="fas fa-sign-in-alt ml-2"></i> دخول</button>
+                <div id="loginError" class="text-red-500 text-sm text-center hidden"><i class="fas fa-exclamation-circle"></i> اسم المستخدم أو كلمة المرور غير صحيحة</div>
+                <div class="text-gray-500 text-xs text-center mt-4">بيانات تجريبية: admin / 123456</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نظام الشكاوي الرئيسي -->
+    <div id="dashboardSection" style="display: none;" class="min-h-screen">
+        <div class="max-w-[1600px] mx-auto px-4 py-6">
+            <!-- رأس الصفحة -->
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-chart-line text-4xl text-indigo-500"></i>
+                    <div>
+                        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">نظام الشكاوي المتقدم</h1>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">إدارة سنوية – خارطة حرارية – تقارير احترافية – مقياس خطورة</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <button id="themeToggleBtn" class="theme-toggle-btn">
+                        <i class="fas fa-moon icon-moon"></i>
+                        <i class="fas fa-sun icon-sun" style="display:none;"></i>
+                        <span class="label-dark">الوضع الداكن</span>
+                        <span class="label-light" style="display:none;">الوضع الفاتح</span>
+                    </button>
+                    <div class="bg-gray-200 dark:bg-gray-800/60 rounded-xl px-3 py-2 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-indigo-500"></i>
+                        <select id="yearSelector" class="bg-transparent border border-indigo-500 rounded-lg px-3 py-1.5 font-semibold"></select>
+                        <button id="addYearBtn" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-white"><i class="fas fa-plus"></i> سنة</button>
+                        <button id="manualSaveBtn" class="bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg text-white font-bold"><i class="fas fa-save"></i> حفظ البيانات</button>
+                    </div>
+                    <button id="resetYearBtn" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"><i class="fas fa-undo-alt"></i> إعادة تعيين</button>
+                    <button id="exportExcelBtn" class="btn-primary text-white px-4 py-2 rounded-xl"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button id="exportWordBtn" class="word-btn text-white px-4 py-2 rounded-xl"><i class="fab fa-microsoft"></i> Word</button>
+                    <button id="addDepartmentBtn" class="bg-amber-700 hover:bg-amber-600 text-white px-4 py-2 rounded-xl"><i class="fas fa-plus-circle"></i> قسم</button>
+                    <button id="addDateBtn" class="bg-cyan-700 hover:bg-cyan-600 text-white px-4 py-2 rounded-xl"><i class="fas fa-calendar-plus"></i> يوم</button>
+                    <button id="logoutBtn" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-xl"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                </div>
+            </div>
+
+
+            <!-- واجهة ترحيبية ذكية -->
+            <div class="hero-card rounded-3xl p-6 mb-6 shadow-2xl">
+                <div class="relative z-10 grid grid-cols-1 xl:grid-cols-3 gap-5 items-center">
+                    <div class="xl:col-span-2">
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="metric-chip"><i class="fas fa-shield-halved text-emerald-300"></i> لوحة مراقبة تفاعلية</span>
+                            <span class="metric-chip"><i class="fas fa-bolt text-amber-300"></i> تحديث فوري</span>
+                            <span class="metric-chip"><i class="fas fa-wand-magic-sparkles text-cyan-300"></i> تصميم مطوّر</span>
+                        </div>
+                        <h2 class="text-3xl md:text-5xl font-black shimmer-title leading-tight">المنصة الذكية للشكاوي</h2>
+                        <p class="mt-3 text-sm md:text-base text-gray-200 dark:text-gray-300">
+                            متابعة مباشرة للأقسام، تحليل يومي، مؤشرات خطورة، وتقارير جاهزة للتصدير بطريقة أكثر وضوحاً وجاذبية.
+                        </p>
+                    </div>
+                    <div class="bg-white/10 dark:bg-black/20 rounded-3xl p-4 border border-white/10 backdrop-blur-md">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs text-gray-300 dark:text-gray-400">الوقت والتاريخ الآن</p>
+                                <div id="currentDateTime" class="live-clock text-lg md:text-xl font-extrabold mt-1">--:--</div>
+                            </div>
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 grid place-items-center text-2xl text-cyan-200">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                            <div class="metric-chip justify-center"><i class="fas fa-database"></i> حفظ تلقائي</div>
+                            <div class="metric-chip justify-center"><i class="fas fa-chart-pie"></i> رسوم ذكية</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- شريط معلومات متحرك -->
+            <div class="smart-ticker glass-card rounded-2xl p-3 mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white grid place-items-center shrink-0"><i class="fas fa-bullhorn"></i></div>
+                <div class="overflow-hidden">
+                    <p id="tickerText" class="font-bold text-sm md:text-base">يتم تحليل بيانات الشكاوى حالياً...</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">نصيحة: انقر نقراً مزدوجاً على أي خلية لتعديل الرقم مباشرة.</p>
+                </div>
+            </div>
+
+            <!-- شريط دلالات الألوان -->
+            <div class="glass-card p-3 mb-6 flex flex-wrap justify-center gap-6 text-sm rounded-2xl">
+                <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-low"></div><span>🟢 منخفض (0-50)</span></div>
+                <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-mid"></div><span>🟠 متوسط (51-150)</span></div>
+                <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-high"></div><span>🔴 مرتفع (151-300)</span></div>
+                <div class="flex items-center gap-2"><div class="w-5 h-5 rounded severity-critical"></div><span>🔥 حرج (>300)</span></div>
+            </div>
+
+            <!-- إحصائيات عليا -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="glass-card stat-card p-4 flex justify-between items-center rounded-2xl"><div><i class="fas fa-building text-indigo-500"></i><p class="text-xs">الأقسام</p></div><span id="statDepartments" class="text-2xl font-bold">0</span></div>
+                <div class="glass-card stat-card p-4 flex justify-between items-center rounded-2xl"><div><i class="fas fa-calendar-week text-emerald-500"></i><p class="text-xs">الأيام</p></div><span id="statDays" class="text-2xl font-bold">0</span></div>
+                <div class="glass-card stat-card p-4 flex justify-between items-center rounded-2xl"><div><i class="fas fa-chart-line text-amber-500"></i><p class="text-xs">إجمالي الشكاوي</p></div><span id="statTotalComplaints" class="text-2xl font-bold">0</span></div>
+                <div class="glass-card stat-card p-4 flex justify-between items-center rounded-2xl"><div><i class="fas fa-chart-simple text-rose-500"></i><p class="text-xs">أعلى يوم</p></div><span id="statPeakDay" class="text-sm font-bold">-</span></div>
+                <div class="glass-card stat-card p-4 flex justify-between items-center rounded-2xl" style="background: rgba(79,70,229,0.1);"><div><i class="fas fa-calculator text-purple-600"></i><p class="text-xs">مجموع المجاميع</p></div><span id="statGrandTotal" class="text-2xl font-extrabold text-purple-600">0</span></div>
+            </div>
+
+
+            <!-- بطاقات التحليل السريع -->
+            <div id="insightCardsContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"></div>
+
+            <!-- منصة أشكال ورسوم إضافية -->
+            <div class="premium-ribbon mb-6">
+                <div class="relative z-10 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-black text-lg"><i class="fas fa-gem ml-2 text-cyan-400"></i> السلام عليك يا ابا عبد الله</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-300">أشكال تفاعلية، ترتيب الأقسام، توزيع الخطورة، ومؤشرات يومية أكثر وضوحاً.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs font-bold">
+                        <span class="metric-chip"><i class="fas fa-circle-nodes"></i> فقاعات الأقسام</span>
+                        <span class="metric-chip"><i class="fas fa-ranking-star"></i> منصة الأعلى</span>
+                        <span class="metric-chip"><i class="fas fa-chart-pie"></i> توزيع دائري</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                <div class="glass-card rounded-3xl p-5 xl:col-span-2">
+                    <div class="section-title-fancy"><span class="title-icon"><i class="fas fa-circle-nodes"></i></span><span>لوحة الاقسام</span></div>
+                    <div id="shapeBoard" class="shape-board"></div>
+                </div>
+                <div class="glass-card rounded-3xl p-5">
+                    <div class="section-title-fancy"><span class="title-icon"><i class="fas fa-chart-pie"></i></span><span>توزيع الخطورة</span></div>
+                    <div id="riskDonutChart" style="height:315px;"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                <div class="glass-card rounded-3xl p-5 xl:col-span-2">
+                    <div class="section-title-fancy"><span class="title-icon"><i class="fas fa-ranking-star"></i></span><span>منصة أعلى الأقسام نشاطاً</span></div>
+                    <div id="topPodiumContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                </div>
+                <div class="glass-card rounded-3xl p-5">
+                    <div class="section-title-fancy"><span class="title-icon"><i class="fas fa-bullseye"></i></span><span>رادار المقارنة</span></div>
+                    <div id="advancedRadarChart" style="height:280px;"></div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-5 mb-6">
+                <div class="section-title-fancy"><span class="title-icon"><i class="fas fa-calendar-days"></i></span><span>شرائط الأيام حسب الضغط</span></div>
+                <div id="miniCalendarContainer" class="mini-calendar"></div>
+            </div>
+
+
+            <!-- أدوات بحث وتحكم سريعة -->
+            <div class="glass-card rounded-2xl p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                    <div class="md:col-span-2 relative">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                        <input id="quickSearchInput" type="text" class="quick-control w-full rounded-xl py-3 pr-10 pl-3 border" placeholder="بحث سريع باسم القسم...">
+                    </div>
+                    <select id="severityFilter" class="quick-control rounded-xl py-3 px-3 border">
+                        <option value="all">كل مستويات الخطورة</option>
+                        <option value="critical">الأقسام الحرجة فقط</option>
+                        <option value="high">الأقسام المرتفعة فقط</option>
+                        <option value="mid">الأقسام المتوسطة فقط</option>
+                        <option value="low">الأقسام المنخفضة فقط</option>
+                    </select>
+                    <button id="scrollToTableBtn" class="btn-primary text-white rounded-xl py-3 font-bold">
+                        <i class="fas fa-table ml-1"></i> الذهاب للجدول
+                    </button>
+                </div>
+            </div>
+
+            <!-- مقياس شدة الخطورة - المؤشر الدائري (الساعة) + الأشرطة -->
+            <div class="glass-card p-4 mb-6 rounded-2xl">
+                <h3 class="font-bold text-lg mb-3 text-center"><i class="fas fa-tachometer-alt ml-2 text-orange-500"></i> مقياس شدة الخطورة العام</h3>
+                <div class="flex justify-center mb-4">
+                    <div id="gaugeChart" style="width: 380px; height: 280px;"></div>
+                </div>
+                <h4 class="font-semibold text-md mb-2"><i class="fas fa-list ml-1 text-indigo-400"></i> تفصيل الخطورة لكل قسم</h4>
+                <div id="severityGaugeContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- فلتر الأقسام -->
+            <div class="glass-card p-3 mb-6 flex flex-wrap items-center gap-4 justify-between rounded-2xl">
+                <div class="flex gap-2"><i class="fas fa-filter"></i><span class="font-semibold">تصفية القسم:</span></div>
+                <div class="flex flex-wrap gap-2" id="departmentFilterContainer"></div>
+                <button id="clearDeptFilter" class="bg-gray-600 hover:bg-gray-500 text-white text-sm px-3 py-1 rounded-full"><i class="fas fa-times-circle"></i> إلغاء الفلتر</button>
+            </div>
+
+            <!-- الرسوم البيانية -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card p-3 rounded-2xl"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-cyan-500"></i> الاتجاه اليومي</h3><div id="trendChart" style="height: 300px;"></div></div>
+                <div class="glass-card p-3 rounded-2xl"><h3 class="font-bold mb-2"><i class="fas fa-chart-simple ml-1 text-indigo-500"></i> إجمالي الأقسام</h3><div id="barChart" style="height: 300px;"></div></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card p-3 rounded-2xl"><h3 class="font-bold mb-2"><i class="fas fa-fire ml-1 text-orange-500"></i> الخارطة الحرارية</h3><div id="heatmapChart" style="height: 400px;"></div></div>
+                <div class="glass-card p-3 rounded-2xl"><h3 class="font-bold mb-2"><i class="fas fa-chart-line ml-1 text-purple-500"></i> اتجاهات متعددة (اختر أقساماً)</h3><div id="multiTrendChart" style="height: 350px;"></div><div id="deptCheckboxContainer" class="flex flex-wrap gap-2 mt-3"></div></div>
+            </div>
+
+            <!-- الجدول التفاعلي -->
+            <div class="glass-card p-2 overflow-x-auto rounded-2xl">
+                <div class="flex justify-between p-2 flex-wrap gap-2">
+                    <span><i class="fas fa-table ml-1"></i> جدول الشكاوي (نقر مزدوج لتعديل القيمة أو التاريخ)</span>
+                    <span class="text-xs text-gray-500">🗑️ أيقونة الحذف بجانب كل قسم ويوم | الألوان تعكس مستوى الضغط</span>
+                </div>
+                <div class="overflow-x-auto max-h-[500px] overflow-y-auto rounded-2xl">
+                    <table class="editable-table min-w-[900px]" id="complaintsTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                        <tfoot id="tableFooter" style="font-weight:bold;"></tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-4 text-center text-gray-500 text-xs">✅ حفظ تلقائي لكل سنة | 📄 تقارير Word, Excel | ⏱️ مقياس الخطورة بشكل الساعة | 🗑️ حذف الأيام والأقسام</div>
+            <div class="floating-actions" aria-label="إجراءات سريعة">
+                <button id="floatingTopBtn" class="floating-action-btn" title="العودة للأعلى"><i class="fas fa-arrow-up"></i></button>
+                <button id="floatingPrintBtn" class="floating-action-btn" title="طباعة الصفحة"><i class="fas fa-print"></i></button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ======================== بيانات نظام الشكاوي ========================
+        const RAW_DEPTS = ["باب بغداد", "البهادلية", "السعدية", "الغدير", "الحر", "الخيرات", "الجدول الغربي", "الحسينية", "الهندية",
+            "عين التمر"
+        ];
+        const RAW_VALUES = [
+            [54, 62, 79, 104, 122, 138, 153, 176, 199, 238, 279, 328, 394, 431, 447, 322, 82],
+            [30, 38, 41, 40, 65, 80, 85, 90, 145, 220, 235, 270, 317, 335, 310, 110, 35],
+            [45, 33, 35, 65, 52, 45, 60, 62, 70, 77, 100, 115, 122, 177, 121, 123, 30],
+            [15, 18, 17, 17, 19, 19, 21, 23, 26, 24, 26, 23, 28, 26, 26, 25, 10],
+            [19, 21, 20, 23, 21, 29, 38, 39, 30, 27, 22, 27, 20, 21, 25, 16, 13],
+            [11, 10, 12, 18, 13, 20, 32, 39, 38, 32, 40, 43, 43, 47, 21, 10, 4],
+            [8, 15, 18, 18, 24, 28, 31, 34, 35, 38, 42, 44, 48, 43, 40, 34, 6],
+            [20, 15, 24, 26, 30, 30, 25, 40, 50, 80, 85, 95, 120, 150, 150, 75, 20],
+            [14, 17, 22, 24, 29, 33, 41, 58, 72, 75, 86, 90, 102, 95, 76, 54, 16],
+            [1, 2, 3, 4, 4, 3, 2, 1, 1, 0, 3, 3, 2, 3, 2, 1, 2]
+        ];
+
+        function generateDateRangeForYear(year) {
+            let start = new Date(year, 7, 10);
+            let dates = [];
+            for (let i = 0; i < 17; i++) {
+                let d = new Date(start);
+                d.setDate(start.getDate() + i);
+                dates.push(`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`);
+            }
+            return dates;
+        }
+
+        let yearlyData = {};
+        let currentYear = "2024";
+        let currentDeptFilter = null;
+        let currentSearchText = "";
+        let currentRowSeverityFilter = "all";
+        let selectedDeptsForMulti = new Set();
+        let charts = { trend: null, bar: null, multi: null, heat: null, gauge: null, donut: null, radar: null };
+
+        // ======================== قاعدة بيانات داخل الصفحة لحفظ السنوات ========================
+        // الإصدار الجديد يعتمد على IndexedDB بدلاً من localStorage.
+        // IndexedDB هي قاعدة بيانات داخل المتصفح، وتحفظ كل السنوات مع الأقسام والتواريخ والقيم.
+        const DB_NAME = "complaints_dashboard_years_db";
+        const DB_VERSION = 1;
+        const DB_STORE = "dashboard_state";
+        const DB_STATE_ID = "all_years_state";
+        const DB_BACKUP_KEY = "complaints_indexeddb_backup_v6";
+        const LEGACY_STORAGE_KEYS = ["complaints_advanced_v5", "complaints_advanced_v4"];
+        let complaintsDBInstance = null;
+        let isSavingYears = false;
+
+        function cloneMatrix(matrix) {
+            return Array.isArray(matrix) ? matrix.map(row => Array.isArray(row) ? row.map(v => Number(v) || 0) : []) : [];
+        }
+
+        function deepCloneYearData(data, fallbackYear = currentYear) {
+            return {
+                departments: Array.isArray(data?.departments) ? [...data.departments] : [...RAW_DEPTS],
+                dates: Array.isArray(data?.dates) ? [...data.dates] : generateDateRangeForYear(parseInt(fallbackYear) || 2024),
+                dataMatrix: cloneMatrix(data?.dataMatrix)
+            };
+        }
+
+        function changeDatesToYear(dates, targetYear) {
+            const parsedYear = parseInt(targetYear) || new Date().getFullYear();
+            const fallbackDates = generateDateRangeForYear(parsedYear);
+            return (Array.isArray(dates) && dates.length ? dates : fallbackDates).map((dateValue, idx) => {
+                const parts = String(dateValue || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (parts) return `${parsedYear}-${parts[2]}-${parts[3]}`;
+                return fallbackDates[idx] || fallbackDates[fallbackDates.length - 1];
+            });
+        }
+
+        function normalizeYearData(data, year) {
+            const safe = deepCloneYearData(data || {}, year);
+            const yearNumber = parseInt(year) || 2024;
+
+            safe.departments = safe.departments.map(x => String(x || '').trim()).filter(Boolean);
+            if (!safe.departments.length) safe.departments = [...RAW_DEPTS];
+            if (!safe.dates.length) safe.dates = generateDateRangeForYear(yearNumber);
+
+            safe.dataMatrix = safe.departments.map((_, rowIndex) => {
+                const oldRow = Array.isArray(safe.dataMatrix[rowIndex]) ? safe.dataMatrix[rowIndex] : [];
+                return safe.dates.map((_, colIndex) => Number(oldRow[colIndex]) || 0);
+            });
+
+            return safe;
+        }
+
+        function normalizeAllYears() {
+            const normalized = {};
+            Object.keys(yearlyData || {}).forEach(year => {
+                if (/^\d{4}$/.test(String(year))) {
+                    normalized[String(year)] = normalizeYearData(yearlyData[year], year);
+                }
+            });
+            yearlyData = normalized;
+        }
+
+        function buildStateObject() {
+            normalizeAllYears();
+            return {
+                id: DB_STATE_ID,
+                version: "6.0-indexeddb",
+                savedAt: new Date().toISOString(),
+                currentYear: String(currentYear || "2024"),
+                yearlyData: yearlyData || {}
+            };
+        }
+
+        function openComplaintsDatabase() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) {
+                    reject(new Error("IndexedDB غير مدعوم في هذا المتصفح"));
+                    return;
+                }
+                if (complaintsDBInstance) {
+                    resolve(complaintsDBInstance);
+                    return;
+                }
+
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(DB_STORE)) {
+                        db.createObjectStore(DB_STORE, { keyPath: "id" });
+                    }
+                };
+
+                request.onsuccess = function(event) {
+                    complaintsDBInstance = event.target.result;
+                    complaintsDBInstance.onversionchange = function() {
+                        complaintsDBInstance.close();
+                        complaintsDBInstance = null;
+                    };
+                    resolve(complaintsDBInstance);
+                };
+
+                request.onerror = function() {
+                    reject(request.error || new Error("فشل فتح قاعدة بيانات السنوات"));
+                };
+            });
+        }
+
+        async function saveStateToIndexedDB(state) {
+            const db = await openComplaintsDatabase();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(DB_STORE, "readwrite");
+                const store = tx.objectStore(DB_STORE);
+                store.put(state);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => reject(tx.error || new Error("فشل حفظ البيانات في IndexedDB"));
+                tx.onabort = () => reject(tx.error || new Error("تم إلغاء حفظ البيانات في IndexedDB"));
+            });
+        }
+
+        async function readStateFromIndexedDB() {
+            const db = await openComplaintsDatabase();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(DB_STORE, "readonly");
+                const store = tx.objectStore(DB_STORE);
+                const request = store.get(DB_STATE_ID);
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error || new Error("فشل قراءة بيانات السنوات من IndexedDB"));
+            });
+        }
+
+        function readLegacyStateFromLocalStorage() {
+            for (const key of LEGACY_STORAGE_KEYS) {
+                const raw = localStorage.getItem(key);
+                if (!raw) continue;
+                try {
+                    const saved = JSON.parse(raw);
+                    if (saved && saved.yearlyData && typeof saved.yearlyData === "object") {
+                        return saved;
+                    }
+                } catch (error) {
+                    console.warn(`تعذر قراءة بيانات التخزين القديمة من ${key}:`, error);
+                }
+            }
+            return null;
+        }
+
+        async function persistAllYears() {
+            if (isSavingYears) {
+                // منع تضارب عمليتي حفظ متزامنتين. سيتم تنفيذ الحفظ التالي من آخر استدعاء.
+                await new Promise(resolve => setTimeout(resolve, 80));
+            }
+
+            const state = buildStateObject();
+            isSavingYears = true;
+            try {
+                await saveStateToIndexedDB(state);
+
+                // نسخة احتياطية صغيرة وترحيل فقط، لكن الاعتماد الأساسي على IndexedDB.
+                try {
+                    localStorage.setItem(DB_BACKUP_KEY, JSON.stringify(state));
+                } catch (backupError) {
+                    console.warn("تعذر حفظ النسخة الاحتياطية في localStorage:", backupError);
+                }
+
+                return true;
+            } catch (error) {
+                console.error("تعذر حفظ بيانات السنوات في قاعدة البيانات:", error);
+                alert("تعذر حفظ بيانات السنوات في قاعدة البيانات الداخلية للصفحة. تأكدي أن المتصفح يسمح بالتخزين المحلي وأن الصفحة ليست في وضع التصفح الخفي.");
+                return false;
+            } finally {
+                isSavingYears = false;
+            }
+        }
+
+        async function loadAllYears() {
+            let saved = null;
+
+            try {
+                saved = await readStateFromIndexedDB();
+            } catch (error) {
+                console.warn("تعذر قراءة IndexedDB، سيتم فحص النسخة القديمة:", error);
+            }
+
+            if (!saved) {
+                saved = readLegacyStateFromLocalStorage();
+                if (!saved) {
+                    try {
+                        const backupRaw = localStorage.getItem(DB_BACKUP_KEY);
+                        if (backupRaw) saved = JSON.parse(backupRaw);
+                    } catch (error) {
+                        console.warn("تعذر قراءة النسخة الاحتياطية:", error);
+                    }
+                }
+            }
+
+            if (saved && saved.yearlyData && typeof saved.yearlyData === "object") {
+                yearlyData = saved.yearlyData;
+                currentYear = String(saved.currentYear || "2024");
+                normalizeAllYears();
+
+                if (!yearlyData[currentYear]) {
+                    const availableYears = Object.keys(yearlyData).sort();
+                    currentYear = availableYears[availableYears.length - 1] || "2024";
+                }
+
+                // ترحيل أي بيانات قديمة إلى قاعدة IndexedDB الجديدة.
+                await persistAllYears();
+                return true;
+            }
+
+            return false;
+        }
+
+        async function initDefault() {
+            if (!yearlyData["2024"]) {
+                yearlyData["2024"] = normalizeYearData({
+                    departments: [...RAW_DEPTS],
+                    dates: generateDateRangeForYear(2024),
+                    dataMatrix: RAW_VALUES.map(r => [...r])
+                }, "2024");
+            }
+            if (!yearlyData[currentYear]) currentYear = "2024";
+            await persistAllYears();
+        }
+
+        function getCurrent() { return yearlyData[currentYear]; }
+
+        async function saveCurrent() {
+            const saved = await persistAllYears();
+            if (saved) fullRefreshDashboard();
+        }
+
+
+        async function manualSaveAllData() {
+            const btn = document.getElementById('manualSaveBtn');
+            const oldHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            }
+
+            try {
+                normalizeAllYears();
+                const saved = await persistAllYears();
+                if (!saved) {
+                    showToast('تعذر حفظ البيانات، راجعي إعدادات المتصفح', 'danger');
+                    return false;
+                }
+
+                // قراءة تأكيدية بعد الحفظ للتأكد أن السنة الحالية وكل بياناتها وصلت إلى قاعدة البيانات.
+                const check = await readStateFromIndexedDB();
+                const ok = !!(check && check.yearlyData && check.yearlyData[currentYear]);
+                if (ok) {
+                    const y = check.yearlyData[currentYear];
+                    const rows = Array.isArray(y.departments) ? y.departments.length : 0;
+                    const days = Array.isArray(y.dates) ? y.dates.length : 0;
+                    showToast(`تم حفظ بيانات سنة ${currentYear} بنجاح (${rows} قسم / ${days} يوم)`, 'success');
+                    return true;
+                }
+
+                showToast('تمت محاولة الحفظ لكن لم يتم التحقق من البيانات', 'warning');
+                alert('تمت محاولة الحفظ، لكن لم يتم العثور على السنة الحالية داخل قاعدة البيانات بعد القراءة التأكيدية. جرّبي الضغط على حفظ البيانات مرة أخرى.');
+                return false;
+            } catch (error) {
+                console.error('خطأ أثناء الحفظ اليدوي:', error);
+                showToast('حدث خطأ أثناء حفظ البيانات', 'danger');
+                alert('حدث خطأ أثناء حفظ البيانات: ' + (error?.message || error));
+                return false;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    btn.innerHTML = oldHTML || '<i class="fas fa-save"></i> حفظ البيانات';
+                }
+            }
+        }
+
+        function addDateToCurrent() {
+            let data = getCurrent();
+            let last = new Date(data.dates[data.dates.length - 1]);
+            last.setDate(last.getDate() + 1);
+            let newDate =
+                `${last.getFullYear()}-${(last.getMonth()+1).toString().padStart(2,'0')}-${last.getDate().toString().padStart(2,'0')}`;
+            data.dates.push(newDate);
+            data.dataMatrix.forEach(row => row.push(0));
+            saveCurrent();
+            showToast('تمت إضافة يوم جديد وحفظه في قاعدة البيانات', 'success');
+        }
+
+        function addDepartmentToCurrent() {
+            let name = prompt("اسم القسم الجديد");
+            if (!name || !name.trim()) return;
+            name = name.trim();
+            let data = getCurrent();
+            if (data.departments.includes(name)) { alert("اسم القسم موجود مسبقاً"); return; }
+            data.departments.push(name);
+            data.dataMatrix.push(new Array(data.dates.length).fill(0));
+            saveCurrent();
+            showToast('تمت إضافة القسم الجديد وحفظه في قاعدة البيانات', 'success');
+        }
+
+        function deleteDate(index) {
+            let data = getCurrent();
+            if (!data || data.dates.length <= 1) { alert('⚠️ يجب أن يبقى يوم واحد على الأقل في الجدول'); return; }
+            if (!confirm(`🗑️ هل أنت متأكد من حذف تاريخ "${data.dates[index]}" وجميع بياناته؟`)) return;
+            data.dates.splice(index, 1);
+            data.dataMatrix.forEach(row => row.splice(index, 1));
+            saveCurrent();
+        }
+
+        function deleteDepartment(index) {
+            let data = getCurrent();
+            if (!data || data.departments.length <= 1) { alert('⚠️ يجب أن يبقى قسم واحد على الأقل في الجدول'); return; }
+            const deptName = data.departments[index];
+            if (!confirm(`🗑️ هل أنت متأكد من حذف قسم "${deptName}" وجميع بياناته؟`)) return;
+            data.departments.splice(index, 1);
+            data.dataMatrix.splice(index, 1);
+            if (currentDeptFilter && !data.departments.includes(currentDeptFilter)) {
+                currentDeptFilter = null;
+            }
+            saveCurrent();
+        }
+
+        function resetCurrentYear() {
+            if (!confirm(`إعادة تعيين سنة ${currentYear} إلى البيانات الأصلية؟`)) return;
+            if (currentYear === "2024") {
+                yearlyData["2024"] = normalizeYearData({
+                    departments: [...RAW_DEPTS],
+                    dates: generateDateRangeForYear(2024),
+                    dataMatrix: RAW_VALUES.map(r => [...r])
+                }, "2024");
+            } else {
+                let data = getCurrent();
+                data.dataMatrix = data.departments.map(() => new Array(data.dates.length).fill(0));
+            }
+            saveCurrent();
+            showToast('تمت إعادة تعيين بيانات السنة وحفظها في قاعدة البيانات', 'warning');
+        }
+
+        async function addNewYear() {
+            let ny = prompt("السنة الجديدة (مثال: 2025)", (parseInt(currentYear) + 1).toString());
+            if (!ny) return;
+
+            ny = ny.trim();
+            if (!/^\d{4}$/.test(ny)) {
+                alert("الرجاء إدخال سنة صحيحة مكونة من 4 أرقام، مثال: 2025");
+                return;
+            }
+            if (yearlyData[ny]) {
+                alert("هذه السنة موجودة مسبقاً، اختر سنة أخرى.");
+                return;
+            }
+
+            const copyFromCurrent = confirm("هل تريد نسخ كل معلومات السنة الحالية إلى السنة الجديدة؟\n\nموافق: نسخ الأقسام + الأيام + أرقام الشكاوى، مع تحويل تواريخ الأيام إلى السنة الجديدة.\nإلغاء: إنشاء سنة جديدة بنفس الأقسام والتواريخ الافتراضية وقيم صفرية.");
+
+            if (copyFromCurrent) {
+                const src = normalizeYearData(getCurrent(), currentYear);
+                yearlyData[ny] = normalizeYearData({
+                    departments: [...src.departments],
+                    dates: changeDatesToYear(src.dates, ny),
+                    dataMatrix: src.dataMatrix.map(row => [...row])
+                }, ny);
+            } else {
+                const dates = generateDateRangeForYear(parseInt(ny));
+                const currentDepartments = getCurrent()?.departments?.length ? [...getCurrent().departments] : [...RAW_DEPTS];
+                yearlyData[ny] = normalizeYearData({
+                    departments: currentDepartments,
+                    dates,
+                    dataMatrix: currentDepartments.map(() => new Array(dates.length).fill(0))
+                }, ny);
+            }
+
+            currentYear = ny;
+            currentDeptFilter = null;
+            selectedDeptsForMulti.clear();
+            rebuildYearSelector();
+
+            const saved = await persistAllYears();
+            if (saved) {
+                rebuildYearSelector();
+                fullRefreshDashboard();
+                showToast(`تم إنشاء سنة ${ny} وحفظها داخل قاعدة البيانات`, 'success');
+            }
+        }
+
+        function rebuildYearSelector() {
+            let sel = document.getElementById('yearSelector');
+            if (sel) {
+                sel.innerHTML = '';
+                Object.keys(yearlyData).sort().forEach(y => {
+                    let opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = `سنة ${y}`;
+                    if (y == currentYear) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        async function setCurrentYear(y) {
+            if (yearlyData[y]) {
+                currentYear = y;
+                await persistAllYears();
+                fullRefreshDashboard();
+                rebuildYearSelector();
+            }
+        }
+
+        function getSeverityClass(val) { if (val <= 50) return "severity-low"; if (val <= 150) return "severity-mid"; if (val <=
+                300) return "severity-high"; return "severity-critical"; }
+
+        function getSeverityLevel(total) {
+            if (total <= 500) return { level: "منخفض", color: "#2ecc71", icon: "🟢", percent: Math.min(total / 500 * 10, 10) };
+            if (total <= 1200) return { level: "متوسط", color: "#f39c12", icon: "🟠", percent: 10 + Math.min((total - 500) /
+                    700 * 14, 14) };
+            if (total <= 2500) return { level: "مرتفع", color: "#e74c3c", icon: "🔴", percent: 24 + Math.min((total - 1200) /
+                    1300 * 26, 26) };
+            return { level: "حرج", color: "#8b0000", icon: "🔥", percent: 50 + Math.min((total - 2500) / 2500 * 50, 50) };
+        }
+
+
+        function getSeverityKey(total) {
+            if (total <= 500) return "low";
+            if (total <= 1200) return "mid";
+            if (total <= 2500) return "high";
+            return "critical";
+        }
+
+        function formatNumber(num) {
+            return Number(num || 0).toLocaleString('ar-IQ');
+        }
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-circle-info"></i><span>${message}</span></div>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(() => toast.remove(), 250);
+            }, 2600);
+        }
+
+        function updateLiveClock() {
+            const el = document.getElementById('currentDateTime');
+            if (!el) return;
+            const now = new Date();
+            el.textContent = now.toLocaleString('ar-IQ', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function renderSmartTicker(total, peakDay, peakValue, busiestDept) {
+            const ticker = document.getElementById('tickerText');
+            if (!ticker) return;
+            ticker.innerHTML = `📌 إجمالي الشكاوى: <span class="text-indigo-500">${formatNumber(total)}</span> | أعلى يوم: <span class="text-amber-500">${peakDay || '-'}</span> (${formatNumber(peakValue)}) | أكثر قسم نشاطاً: <span class="text-rose-500">${busiestDept || '-'}</span>`;
+        }
+
+        function renderSmartInsights() {
+            const data = getCurrent();
+            const container = document.getElementById('insightCardsContainer');
+            if (!data || !container) return;
+
+            const deptTotals = data.departments.map((dept, idx) => ({
+                name: dept,
+                total: data.dataMatrix[idx].reduce((a, b) => a + b, 0)
+            })).sort((a, b) => b.total - a.total);
+
+            const dailySums = data.dates.map((date, c) => ({
+                date,
+                total: data.dataMatrix.reduce((sum, row) => sum + (row[c] || 0), 0)
+            }));
+            const total = dailySums.reduce((sum, d) => sum + d.total, 0);
+            const avg = data.dates.length ? Math.round(total / data.dates.length) : 0;
+            const criticalCells = data.dataMatrix.flat().filter(v => v > 300).length;
+            const busiest = deptTotals[0] || { name: '-', total: 0 };
+            const calmest = deptTotals[deptTotals.length - 1] || { name: '-', total: 0 };
+            const lastDay = dailySums[dailySums.length - 1]?.total || 0;
+            const firstDay = dailySums[0]?.total || 0;
+            const change = firstDay ? Math.round(((lastDay - firstDay) / firstDay) * 100) : 0;
+            const peak = dailySums.reduce((m, d) => d.total > m.total ? d : m, { date: '-', total: 0 });
+
+            container.innerHTML = `
+                <div class="insight-card glass-card bg-gradient-to-br from-indigo-600/80 to-purple-700/80 text-white">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <p class="text-xs opacity-80">أكثر قسم يحتاج متابعة</p>
+                            <h3 class="text-2xl font-black mt-1">${busiest.name}</h3>
+                            <p class="mt-1 text-sm opacity-90">${formatNumber(busiest.total)} شكوى مسجلة</p>
+                        </div>
+                        <i class="fas fa-location-dot text-4xl opacity-60"></i>
+                    </div>
+                    <div class="mini-progress mt-4"><div class="mini-progress-fill" style="width:100%"></div></div>
+                </div>
+                <div class="insight-card glass-card bg-gradient-to-br from-cyan-600/80 to-emerald-600/80 text-white">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <p class="text-xs opacity-80">المعدل اليومي للشكاوى</p>
+                            <h3 class="text-2xl font-black mt-1">${formatNumber(avg)}</h3>
+                            <p class="mt-1 text-sm opacity-90">التغير من أول يوم إلى آخر يوم: ${change > 0 ? '+' : ''}${change}%</p>
+                        </div>
+                        <i class="fas fa-wave-square text-4xl opacity-60"></i>
+                    </div>
+                    <div class="mini-progress mt-4"><div class="mini-progress-fill" style="width:${Math.min(Math.abs(change),100)}%"></div></div>
+                </div>
+                <div class="insight-card glass-card bg-gradient-to-br from-rose-600/80 to-amber-600/80 text-white">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <p class="text-xs opacity-80">تنبيه ذكي</p>
+                            <h3 class="text-2xl font-black mt-1">${criticalCells > 0 ? 'حالات حرجة' : 'الوضع مستقر'}</h3>
+                            <p class="mt-1 text-sm opacity-90">${criticalCells > 0 ? `${criticalCells} خلية تجاوزت 300 شكوى` : `أقل قسم: ${calmest.name} (${formatNumber(calmest.total)})`}</p>
+                        </div>
+                        <i class="fas fa-triangle-exclamation text-4xl opacity-60"></i>
+                    </div>
+                    <div class="mini-progress mt-4"><div class="mini-progress-fill" style="width:${Math.min(criticalCells * 10,100)}%"></div></div>
+                </div>
+            `;
+            renderSmartTicker(total, peak.date, peak.total, busiest.name);
+        }
+
+
+        // ======================== مقياس الخطورة بشكل الساعة (Speedometer Gauge) ========================
+        function renderSeverityGaugeChart() {
+            let data = getCurrent();
+            if (!data) return;
+            let grandTotal = 0;
+            for (let r = 0; r < data.departments.length; r++) {
+                for (let c = 0; c < data.dates.length; c++) { grandTotal += data.dataMatrix[r][c]; }
+            }
+            const maxThreshold = 5000;
+            let gaugeValue = Math.min(Math.round((grandTotal / maxThreshold) * 100), 100);
+            let severity = getSeverityLevel(grandTotal);
+
+            if (charts.gauge) charts.gauge.dispose();
+            let gaugeDom = document.getElementById('gaugeChart');
+            if (!gaugeDom) return;
+            charts.gauge = echarts.init(gaugeDom);
+            let isDark = document.body.classList.contains('dark');
+            charts.gauge.setOption({
+                series: [{
+                    type: 'gauge',
+                    startAngle: 210,
+                    endAngle: -30,
+                    center: ['50%', '58%'],
+                    radius: '88%',
+                    min: 0,
+                    max: 100,
+                    splitNumber: 10,
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            width: 22,
+                            color: [
+                                [0.10, '#2ecc71'],
+                                [0.24, '#f39c12'],
+                                [0.50, '#e74c3c'],
+                                [1, '#8b0000']
+                            ]
+                        }
+                    },
+                    pointer: {
+                        icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                        length: '72%',
+                        width: 7,
+                        itemStyle: { color: isDark ? '#ff6b6b' : '#c0392b' }
+                    },
+                    axisTick: { distance: -18, length: 7, lineStyle: { width: 2, color: isDark ? '#ccc' :
+                                '#555' } },
+                    splitLine: { distance: -24, length: 14, lineStyle: { width: 3, color: isDark ? '#eee' :
+                                '#333' } },
+                    axisLabel: {
+                        distance: 32,
+                        fontSize: 11,
+                        color: isDark ? '#ddd' : '#333',
+                        formatter: function(v) { return Math.round(v); }
+                    },
+                    anchor: { show: true, size: 18, itemStyle: { color: isDark ? '#ff6b6b' : '#c0392b' } },
+                    title: {
+                        show: true,
+                        offsetCenter: [0, '88%'],
+                        fontSize: 15,
+                        color: isDark ? '#fbbf24' : '#1e40af',
+                        fontWeight: 'bold'
+                    },
+                    detail: {
+                        valueAnimation: true,
+                        fontSize: 32,
+                        offsetCenter: [0, '48%'],
+                        formatter: '{value}%',
+                        color: severity.color,
+                        fontWeight: 'bold'
+                    },
+                    data: [{ value: gaugeValue, name: `شدة الخطورة: ${severity.level}` }]
+                }]
+            });
+        }
+
+        // ======================== أشرطة الخطورة لكل قسم ========================
+        function renderSeverityGauge() {
+            let data = getCurrent();
+            if (!data) return;
+            let container = document.getElementById('severityGaugeContainer');
+            if (!container) return;
+            let deptTotals = data.departments.map((dept, idx) => ({ name: dept, total: data.dataMatrix[idx].reduce((a, b) =>
+                    a + b, 0) }));
+            let maxTotal = Math.max(...deptTotals.map(d => d.total), 1);
+            container.innerHTML = deptTotals.map(dept => {
+                let severity = getSeverityLevel(dept.total);
+                let percent = Math.round((dept.total / maxTotal) * 100);
+                return `
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-3 shadow">
+                        <div class="flex justify-between items-center flex-wrap gap-2">
+                            <span class="font-bold text-sm">${dept.name}</span>
+                            <span class="text-xs"><i class="fas fa-chart-simple"></i> ${dept.total.toLocaleString()} شكوى</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:${severity.color}20; color:${severity.color}; border:1px solid ${severity.color}40;">${severity.icon} ${severity.level}</span>
+                        </div>
+                        <div class="gauge-bar mt-2">
+                            <div class="gauge-fill" style="width: ${percent}%; background: ${severity.color};"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1 text-left">${percent}% من أعلى قسم</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ======================== الجدول ========================
+        function attachCellEditEvents() {
+            document.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.removeEventListener('dblclick', cell._listener);
+                let handler = (e) => {
+                    let row = parseInt(cell.dataset.row);
+                    let col = parseInt(cell.dataset.col);
+                    let data = getCurrent();
+                    let input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = data.dataMatrix[row][col];
+                    input.classList.add('edit-input');
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                    input.focus();
+                    let save = () => { let nv = parseInt(input.value); if (isNaN(nv)) nv = 0; if (nv < 0) nv =
+                            0;
+                        data.dataMatrix[row][col] = nv;
+                        saveCurrent(); };
+                    input.addEventListener('blur', save);
+                    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') save(); });
+                };
+                cell.addEventListener('dblclick', handler);
+                cell._listener = handler;
+            });
+        }
+
+        function attachDateEditEvents() {
+            document.querySelectorAll('.date-header-cell').forEach(th => {
+                th.removeEventListener('dblclick', th._dateListener);
+                let handler = () => {
+                    let idx = parseInt(th.dataset.dateidx);
+                    let data = getCurrent();
+                    let newDate = prompt("تعديل التاريخ (صيغة YYYY-MM-DD):", data.dates[idx]);
+                    if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) { data.dates[idx] = newDate;
+                        saveCurrent(); } else if (newDate) alert("صيغة غير صالحة! استخدم YYYY-MM-DD");
+                };
+                th.addEventListener('dblclick', handler);
+                th._dateListener = handler;
+            });
+        }
+
+        function renderTable() {
+            let data = getCurrent();
+            if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            let thead = document.getElementById('tableHeader');
+            let tbody = document.getElementById('tableBody');
+            let tfoot = document.getElementById('tableFooter');
+
+            // رأس الجدول
+            let headerHtml = `<tr><th class="sticky-right" style="min-width:130px;">القسم \\ التاريخ</th>`;
+            for (let i = 0; i < dates.length; i++) {
+                headerHtml += `
+                <th class="date-header-cell" data-dateidx="${i}" style="cursor:pointer; position:relative; min-width:90px;">
+                    ${dates[i]}
+                    <i class="fas fa-pen-alt text-[10px] text-indigo-500 ml-1"></i>
+                    <i class="fas fa-times-circle delete-icon delete-date-icon" 
+                       onclick="event.stopPropagation(); deleteDate(${i});" 
+                       title="حذف هذا اليوم"
+                       style="color:#ef4444;"></i>
+                </th>`;
+            }
+            headerHtml += `<th class="sticky-left">المجموع</th></tr>`;
+            thead.innerHTML = headerHtml;
+
+            // جسم الجدول
+            let bodyHtml = '';
+            for (let r = 0; r < departments.length; r++) {
+                if (currentDeptFilter && departments[r] !== currentDeptFilter) continue;
+                let rowTotal = dataMatrix[r].reduce((a, b) => a + b, 0);
+                let searchOk = !currentSearchText || departments[r].toLowerCase().includes(currentSearchText.toLowerCase());
+                let severityOk = currentRowSeverityFilter === "all" || getSeverityKey(rowTotal) === currentRowSeverityFilter;
+                if (!searchOk || !severityOk) continue;
+                bodyHtml += `<tr>
+                    <td class="sticky-right font-bold" style="min-width:130px;">
+                        ${departments[r]}
+                        <i class="fas fa-trash-alt delete-icon ml-2" 
+                           onclick="event.stopPropagation(); deleteDepartment(${r});" 
+                           title="حذف هذا القسم"
+                           style="color:#ef4444;"></i>
+                    </td>`;
+                for (let c = 0; c < dates.length; c++) {
+                    let val = dataMatrix[r][c];
+                    let severityClass = getSeverityClass(val);
+                    bodyHtml +=
+                        `<td class="editable-cell ${severityClass}" data-row="${r}" data-col="${c}" style="min-width:70px;">${val}</td>`;
+                }
+                bodyHtml +=
+                    `<td class="sticky-left text-indigo-600 dark:text-indigo-300 font-bold">${rowTotal.toLocaleString()}</td>`;
+                bodyHtml += `</tr>`;
+            }
+            tbody.innerHTML = bodyHtml;
+
+            // تذييل الجدول
+            let dailySums = new Array(dates.length).fill(0);
+            for (let r = 0; r < departments.length; r++)
+                for (let c = 0; c < dates.length; c++) dailySums[c] += dataMatrix[r][c];
+            let grandTotal = dailySums.reduce((a, b) => a + b, 0);
+            let footerRow =
+                `<tr class="bg-gray-200 dark:bg-indigo-950/50 font-bold"><td class="sticky-right">🏆 مجموع المجاميع</td>`;
+            for (let s of dailySums) footerRow +=
+                `<td style="font-weight:bold; font-size:1rem;">${s.toLocaleString()}</td>`;
+            footerRow +=
+                `<td class="sticky-left text-purple-700 dark:text-purple-300 text-xl">${grandTotal.toLocaleString()}</td></tr>`;
+            tfoot.innerHTML = footerRow;
+            document.getElementById('statGrandTotal').innerText = grandTotal.toLocaleString();
+            attachCellEditEvents();
+            attachDateEditEvents();
+        }
+
+        function updateStats() {
+            let data = getCurrent();
+            if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            document.getElementById('statDepartments').innerText = departments.length;
+            document.getElementById('statDays').innerText = dates.length;
+            let total = 0,
+                maxDayVal = 0,
+                maxDayStr = "";
+            for (let c = 0; c < dates.length; c++) { let colSum = 0; for (let r = 0; r < departments.length; r++) { let v =
+                        dataMatrix[r][c];
+                    total += v;
+                    colSum += v; } if (colSum > maxDayVal) { maxDayVal = colSum;
+                    maxDayStr = dates[c]; } }
+            document.getElementById('statTotalComplaints').innerText = total.toLocaleString();
+            document.getElementById('statPeakDay').innerHTML = maxDayVal > 0 ?
+                `${maxDayStr}<br><span class="text-xs">${maxDayVal.toLocaleString()}</span>` : "-";
+        }
+
+        // ======================== الرسوم البيانية ========================
+        function getTextColor() { return document.body.classList.contains('dark') ? '#ddd' : '#333'; }
+
+        function renderCharts() {
+            let data = getCurrent();
+            if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            let filteredIndices = currentDeptFilter ? [departments.indexOf(currentDeptFilter)] : null;
+            let dailyFilteredTotal = new Array(dates.length).fill(0);
+            if (filteredIndices && filteredIndices[0] >= 0) { let r = filteredIndices[0]; for (let c = 0; c < dates.length; c++)
+                    dailyFilteredTotal[c] = dataMatrix[r][c]; } else for (let c = 0; c < dates.length; c++) for (let r = 0; r <
+                    departments.length; r++) dailyFilteredTotal[c] += dataMatrix[r][c];
+            let tc = getTextColor();
+
+            // مخطط الاتجاه اليومي
+            if (charts.trend) charts.trend.dispose();
+            charts.trend = echarts.init(document.getElementById('trendChart'));
+            charts.trend.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: dates, axisLabel: { rotate: 35, color: tc } },
+                yAxis: { type: 'value', name: 'عدد الشكاوي', nameTextStyle: { color: tc }, axisLabel: { color: tc } },
+                series: [{
+                    name: currentDeptFilter ? `القسم: ${currentDeptFilter}` : 'جميع الأقسام',
+                    data: dailyFilteredTotal,
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: { width: 3, color: '#f97316' },
+                    areaStyle: { opacity: 0.2 },
+                    symbol: 'circle',
+                    label: { show: true, position: 'top', fontSize: 10, color: tc, formatter: '{c}' }
+                }]
+            });
+
+            // مخطط الأعمدة
+            let deptTotals = departments.map((_, i) => dataMatrix[i].reduce((a, b) => a + b, 0));
+            if (charts.bar) charts.bar.dispose();
+            charts.bar = echarts.init(document.getElementById('barChart'));
+            charts.bar.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: departments, axisLabel: { rotate: 40, interval: 0, color: tc,
+                        fontSize: 10 } },
+                yAxis: { type: 'value', axisLabel: { color: tc } },
+                series: [{
+                    type: 'bar',
+                    data: deptTotals,
+                    itemStyle: { borderRadius: [8, 8, 0, 0], color: '#4f46e5' },
+                    label: { show: true, position: 'top', fontSize: 11, color: tc, fontWeight: 'bold',
+                        formatter: '{c}' }
+                }]
+            });
+
+            // الخارطة الحرارية
+            let heatData = [];
+            for (let i = 0; i < departments.length; i++)
+                for (let j = 0; j < dates.length; j++) heatData.push([j, i, dataMatrix[i][j]]);
+            if (charts.heat) charts.heat.dispose();
+            charts.heat = echarts.init(document.getElementById('heatmapChart'));
+            charts.heat.setOption({
+                tooltip: { position: 'top' },
+                xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, color: tc, fontSize: 9 } },
+                yAxis: { type: 'category', data: departments, axisLabel: { color: tc, fontSize: 10 } },
+                visualMap: {
+                    min: 0,
+                    max: Math.max(...heatData.map(d => d[2]), 100),
+                    calculable: true,
+                    inRange: { color: ['#0f3b2c', '#f5b042', '#d95b0e', '#a61b1b'] },
+                    textStyle: { color: tc }
+                },
+                series: [{
+                    type: 'heatmap',
+                    data: heatData,
+                    label: { show: true, fontSize: 9, color: '#fff',
+                        formatter: function(p) { return p.data[2] > 0 ? p.data[2] : ''; } }
+                }]
+            });
+
+            updateMultiTrend();
+        }
+
+        function updateMultiTrend() {
+            let data = getCurrent();
+            if (!data) return;
+            let { departments, dates, dataMatrix } = data;
+            let selected = Array.from(selectedDeptsForMulti).filter(d => departments.includes(d));
+            let multiElem = document.getElementById('multiTrendChart');
+            if (!multiElem) return;
+            if (charts.multi) charts.multi.dispose();
+            charts.multi = echarts.init(multiElem);
+            let tc = getTextColor();
+            if (selected.length === 0) {
+                charts.multi.setOption({
+                    title: { text: 'اختر أقساماً من القائمة أدناه لعرض الاتجاهات', left: 'center',
+                        textStyle: { color: tc } },
+                    series: []
+                });
+                return;
+            }
+            let series = selected.map(dept => { let idx = departments.indexOf(dept); return { name: dept, type: 'line',
+                    data: dataMatrix[idx], smooth: true, symbol: 'diamond', lineStyle: { width: 2 },
+                    label: { show: true, position: 'top', fontSize: 9, color: tc, formatter: '{c}' } }; });
+            charts.multi.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { data: selected, textStyle: { color: tc }, orient: 'vertical', right: 10, top: 20 },
+                xAxis: { type: 'category', data: dates, axisLabel: { rotate: 30, color: tc, fontSize: 9 } },
+                yAxis: { type: 'value', name: 'عدد الشكاوي', nameTextStyle: { color: tc },
+                axisLabel: { color: tc } },
+                series: series
+            });
+        }
+
+        function renderDeptFilterButtons() {
+            let data = getCurrent();
+            if (!data) return;
+            let container = document.getElementById('departmentFilterContainer');
+            container.innerHTML =
+                `<button class="filter-btn px-3 py-1 rounded-full text-sm ${!currentDeptFilter?'filter-active':''}" id="filterAllBtn">الكل</button>`;
+            document.getElementById('filterAllBtn').onclick = () => { currentDeptFilter = null;
+                renderDeptFilterButtons();
+                fullRefreshDashboard(); };
+            data.departments.forEach(dept => {
+                let btn = document.createElement('button');
+                btn.className =
+                    `filter-btn px-3 py-1 rounded-full text-sm ${currentDeptFilter===dept?'filter-active':''}`;
+                btn.innerText = dept;
+                btn.onclick = () => { currentDeptFilter = (currentDeptFilter === dept ? null : dept);
+                    renderDeptFilterButtons();
+                    fullRefreshDashboard(); };
+                container.appendChild(btn);
+            });
+            document.getElementById('clearDeptFilter').onclick = () => { currentDeptFilter = null;
+                renderDeptFilterButtons();
+                fullRefreshDashboard(); };
+        }
+
+        function renderMultiCheckboxes() {
+            let data = getCurrent();
+            if (!data) return;
+            let container = document.getElementById('deptCheckboxContainer');
+            container.innerHTML = '';
+            if (selectedDeptsForMulti.size === 0 && data.departments.length) data.departments.slice(0, 4).forEach(d =>
+                selectedDeptsForMulti.add(d));
+            data.departments.forEach(dept => {
+                let label = document.createElement('label');
+                label.className =
+                    'inline-flex items-center gap-1 bg-gray-200 dark:bg-gray-800/50 px-2 py-1 rounded-full text-sm cursor-pointer';
+                let cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = selectedDeptsForMulti.has(dept);
+                cb.onchange = (e) => { if (e.target.checked) selectedDeptsForMulti.add(dept);
+                    else selectedDeptsForMulti.delete(dept);
+                    updateMultiTrend(); };
+                let span = document.createElement('span');
+                span.innerText = dept;
+                label.appendChild(cb);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        }
+
+        // ======================== تصدير إلى Word ========================
+        async function exportToWord() {
+            let data = getCurrent();
+            if (!data) return;
+            let docHtml =
+                `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير الشكاوي ${currentYear}</title><style>body{font-family:'Segoe UI',Arial;margin:25px;background:#fff;color:#000;} .chart-title{font-weight:bold;margin-top:20px;font-size:16px;} img{max-width:100%;border:1px solid #ddd;border-radius:8px;} table{border-collapse:collapse;width:100%;margin:15px 0;} th,td{border:1px solid #666;padding:6px;text-align:center;font-size:12px;} th{background:#e2e8f0;}</style></head><body><h1>📊 تقرير الشكاوي - سنة ${currentYear}</h1><p>تاريخ التصدير: ${new Date().toLocaleString()}</p><div style="margin:10px 0;">الأقسام: <b>${data.departments.length}</b> | الأيام: <b>${data.dates.length}</b> | الإجمالي: <b>${document.getElementById('statTotalComplaints').innerText}</b> | المجموع الكلي: <b>${document.getElementById('statGrandTotal').innerText}</b></div><hr/>`;
+
+            // التقاط المخططات والعداد
+            const chartIds = ['gaugeChart', 'riskDonutChart', 'advancedRadarChart', 'trendChart', 'barChart', 'heatmapChart', 'multiTrendChart'];
+            const chartNames = ['مقياس شدة الخطورة', 'توزيع الخطورة', 'رادار المقارنة', 'الاتجاه اليومي', 'إجمالي الأقسام', 'الخارطة الحرارية', 'اتجاهات متعددة'];
+            for (let i = 0; i < chartIds.length; i++) {
+                let el = document.getElementById(chartIds[i]);
+                if (el && el.offsetHeight > 0) {
+                    let canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+                    docHtml +=
+                        `<div class="chart-title">${chartNames[i]}</div><img src="${canvas.toDataURL()}" style="width:100%;margin-bottom:15px;"/>`;
+                }
+            }
+
+            let tableClone = document.getElementById('complaintsTable').cloneNode(true);
+            // تنظيف أيقونات الحذف من النسخة
+            tableClone.querySelectorAll('.delete-icon, .delete-date-icon, .fa-trash-alt, .fa-times-circle, .fa-pen-alt')
+                .forEach(el => el.remove());
+            docHtml += `<div class="chart-title">📋 الجدول التفصيلي</div>${tableClone.outerHTML}</body></html>`;
+
+            let blob = new Blob([docHtml], { type: 'application/msword' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `تقرير_شكاوي_${currentYear}.doc`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+
+        // ======================== أشكال ورسوم إضافية متقدمة ========================
+        function getDeptTotals() {
+            let data = getCurrent();
+            if (!data) return [];
+            return data.departments.map((dept, idx) => ({
+                name: dept,
+                index: idx,
+                total: data.dataMatrix[idx].reduce((a, b) => a + b, 0),
+                maxCell: Math.max(...data.dataMatrix[idx], 0),
+                avg: Math.round(data.dataMatrix[idx].reduce((a, b) => a + b, 0) / Math.max(data.dates.length, 1))
+            })).sort((a, b) => b.total - a.total);
+        }
+
+        function severityKeyFromTotal(total) {
+            const s = getSeverityLevel(total);
+            if (s.level === 'حرج') return 'critical';
+            if (s.level === 'مرتفع') return 'high';
+            if (s.level === 'متوسط') return 'mid';
+            return 'low';
+        }
+
+        function renderShapeBoard() {
+            const data = getCurrent();
+            const board = document.getElementById('shapeBoard');
+            if (!data || !board) return;
+            const totals = getDeptTotals();
+            const grandTotal = totals.reduce((a, b) => a + b.total, 0);
+            const maxTotal = Math.max(...totals.map(d => d.total), 1);
+            const positions = [
+                ['8%', '14%'], ['69%', '12%'], ['10%', '68%'], ['73%', '69%'],
+                ['31%', '8%'], ['34%', '75%'], ['2%', '42%'], ['82%', '42%']
+            ];
+            let html = `<div class="shape-center"><div><div class="text-xs opacity-80">الإجمالي</div><div class="text-3xl font-black">${grandTotal.toLocaleString()}</div><div class="text-xs opacity-85">شكوى</div></div></div>`;
+            totals.slice(0, 8).forEach((dept, i) => {
+                const size = Math.max(72, Math.min(118, 70 + (dept.total / maxTotal) * 55));
+                const cls = severityKeyFromTotal(dept.total);
+                const [left, top] = positions[i];
+                html += `<div class="shape-bubble ${cls}" style="--size:${size}px; left:${left}; top:${top}; animation-delay:${i * .25}s;" title="${dept.name}: ${dept.total}">
+                    <div>${dept.name}<small>${dept.total.toLocaleString()}</small></div>
+                </div>`;
+            });
+            board.innerHTML = html;
+        }
+
+        function renderTopPodium() {
+            const container = document.getElementById('topPodiumContainer');
+            if (!container) return;
+            const totals = getDeptTotals().slice(0, 3);
+            const colors = [
+                'linear-gradient(135deg, rgba(245,158,11,.95), rgba(217,119,6,.86))',
+                'linear-gradient(135deg, rgba(99,102,241,.95), rgba(79,70,229,.86))',
+                'linear-gradient(135deg, rgba(6,182,212,.92), rgba(14,165,233,.82))'
+            ];
+            const medals = ['🥇', '🥈', '🥉'];
+            container.innerHTML = totals.map((d, i) => `
+                <div class="podium-card text-white" style="background:${colors[i]};">
+                    <div class="relative z-10 flex items-center justify-between gap-3">
+                        <div>
+                            <div class="text-sm opacity-90">المركز ${i+1}</div>
+                            <div class="text-xl font-black mt-1">${d.name}</div>
+                            <div class="text-xs opacity-90 mt-1">أعلى قيمة يومية: ${d.maxCell.toLocaleString()}</div>
+                        </div>
+                        <div class="podium-rank">${medals[i]}</div>
+                    </div>
+                    <div class="relative z-10 mt-4 flex items-end justify-between">
+                        <span class="text-3xl font-black">${d.total.toLocaleString()}</span>
+                        <span class="text-xs bg-white/18 rounded-full px-2 py-1">معدل ${d.avg}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMiniCalendar() {
+            const data = getCurrent();
+            const container = document.getElementById('miniCalendarContainer');
+            if (!data || !container) return;
+            const dailySums = data.dates.map((date, c) => {
+                let sum = 0;
+                for (let r = 0; r < data.departments.length; r++) sum += data.dataMatrix[r][c];
+                return { date, sum };
+            });
+            const max = Math.max(...dailySums.map(d => d.sum), 1);
+            container.innerHTML = dailySums.map((d) => {
+                const p = d.sum / max;
+                let bg = 'linear-gradient(135deg, #10b981, #06b6d4)';
+                if (p > .72) bg = 'linear-gradient(135deg, #dc2626, #f97316)';
+                else if (p > .48) bg = 'linear-gradient(135deg, #f59e0b, #ef4444)';
+                else if (p > .24) bg = 'linear-gradient(135deg, #4f46e5, #06b6d4)';
+                const label = d.date.slice(5).replace('-', '/');
+                return `<div class="day-pill" style="background:${bg}; opacity:${.72 + p * .28};" title="${d.date}: ${d.sum}">${label}<small>${d.sum.toLocaleString()}</small></div>`;
+            }).join('');
+        }
+
+        function renderRiskDonutChart() {
+            const data = getCurrent();
+            const dom = document.getElementById('riskDonutChart');
+            if (!data || !dom || typeof echarts === 'undefined') return;
+            let buckets = { 'منخفض': 0, 'متوسط': 0, 'مرتفع': 0, 'حرج': 0 };
+            for (let r = 0; r < data.departments.length; r++) {
+                for (let c = 0; c < data.dates.length; c++) {
+                    const v = data.dataMatrix[r][c];
+                    if (v <= 50) buckets['منخفض'] += v;
+                    else if (v <= 150) buckets['متوسط'] += v;
+                    else if (v <= 300) buckets['مرتفع'] += v;
+                    else buckets['حرج'] += v;
+                }
+            }
+            if (charts.donut) charts.donut.dispose();
+            charts.donut = echarts.init(dom);
+            const tc = getTextColor();
+            charts.donut.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                legend: { bottom: 0, textStyle: { color: tc } },
+                series: [{
+                    name: 'توزيع الخطورة', type: 'pie', radius: ['45%', '72%'], center: ['50%', '43%'],
+                    roseType: 'radius', avoidLabelOverlap: true,
+                    itemStyle: { borderRadius: 10, borderColor: document.body.classList.contains('dark') ? '#111827' : '#fff', borderWidth: 2 },
+                    label: { color: tc, fontWeight: 'bold', formatter: '{b}\n{d}%' },
+                    data: [
+                        { value: buckets['منخفض'], name: 'منخفض', itemStyle: { color: '#10b981' } },
+                        { value: buckets['متوسط'], name: 'متوسط', itemStyle: { color: '#f59e0b' } },
+                        { value: buckets['مرتفع'], name: 'مرتفع', itemStyle: { color: '#ef4444' } },
+                        { value: buckets['حرج'], name: 'حرج', itemStyle: { color: '#7f1d1d' } }
+                    ]
+                }]
+            });
+        }
+
+        function renderAdvancedRadarChart() {
+            const dom = document.getElementById('advancedRadarChart');
+            if (!dom || typeof echarts === 'undefined') return;
+            const totals = getDeptTotals().slice(0, 5);
+            const max = Math.max(...totals.map(d => d.total), 1);
+            if (charts.radar) charts.radar.dispose();
+            charts.radar = echarts.init(dom);
+            const tc = getTextColor();
+            charts.radar.setOption({
+                tooltip: {},
+                radar: {
+                    indicator: totals.map(d => ({ name: d.name, max: Math.ceil(max * 1.15) })),
+                    radius: '64%',
+                    axisName: { color: tc, fontSize: 10 },
+                    splitLine: { lineStyle: { color: document.body.classList.contains('dark') ? 'rgba(255,255,255,.16)' : 'rgba(15,23,42,.14)' } },
+                    splitArea: { areaStyle: { color: ['rgba(79,70,229,.08)', 'rgba(6,182,212,.05)'] } },
+                    axisLine: { lineStyle: { color: document.body.classList.contains('dark') ? 'rgba(255,255,255,.16)' : 'rgba(15,23,42,.14)' } }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{ value: totals.map(d => d.total), name: 'إجمالي الشكاوى' }],
+                    areaStyle: { opacity: .28 },
+                    lineStyle: { width: 3 },
+                    symbolSize: 7
+                }]
+            });
+        }
+
+        function renderAdvancedVisuals() {
+            renderShapeBoard();
+            renderTopPodium();
+            renderMiniCalendar();
+            renderRiskDonutChart();
+            renderAdvancedRadarChart();
+        }
+
+        // ======================== تحديث كامل للوحة ========================
+        function fullRefreshDashboard() {
+            if (!getCurrent()) initDefault();
+            updateLiveClock();
+            updateStats();
+            renderSmartInsights();
+            renderAdvancedVisuals();
+            renderTable();
+            renderCharts();
+            renderDeptFilterButtons();
+            renderMultiCheckboxes();
+            renderSeverityGauge();
+            renderSeverityGaugeChart();
+        }
+
+        // ======================== إدارة المظهر (داكن/فاتح) - مُصلح ========================
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark');
+                document.body.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                localStorage.setItem('complaints_theme', 'dark');
+            } else {
+                document.body.classList.remove('dark');
+                document.body.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                localStorage.setItem('complaints_theme', 'light');
+            }
+            updateThemeButtonUI();
+        }
+
+        function updateThemeButtonUI() {
+            const isDark = document.body.classList.contains('dark');
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            if (!toggleBtn) return;
+            const moonIcon = toggleBtn.querySelector('.icon-moon');
+            const sunIcon = toggleBtn.querySelector('.icon-sun');
+            const labelDark = toggleBtn.querySelector('.label-dark');
+            const labelLight = toggleBtn.querySelector('.label-light');
+            if (isDark) {
+                if (moonIcon) moonIcon.style.display = 'inline';
+                if (sunIcon) sunIcon.style.display = 'none';
+                if (labelDark) labelDark.style.display = 'inline';
+                if (labelLight) labelLight.style.display = 'none';
+            } else {
+                if (moonIcon) moonIcon.style.display = 'none';
+                if (sunIcon) sunIcon.style.display = 'inline';
+                if (labelDark) labelDark.style.display = 'none';
+                if (labelLight) labelLight.style.display = 'inline';
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('complaints_theme');
+            applyTheme(savedTheme !== 'light'); // افتراضي داكن إذا لم يُحفظ شيء أو كان dark
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.contains('dark');
+            applyTheme(!isDark);
+            // إعادة رسم المخططات لتتكيف مع السمة الجديدة
+            setTimeout(() => {
+                if (charts.trend) { charts.trend.dispose();
+                    charts.trend = null; }
+                if (charts.bar) { charts.bar.dispose();
+                    charts.bar = null; }
+                if (charts.heat) { charts.heat.dispose();
+                    charts.heat = null; }
+                if (charts.multi) { charts.multi.dispose();
+                    charts.multi = null; }
+                if (charts.gauge) { charts.gauge.dispose();
+                    charts.gauge = null; }
+                if (charts.donut) { charts.donut.dispose();
+                    charts.donut = null; }
+                if (charts.radar) { charts.radar.dispose();
+                    charts.radar = null; }
+                renderCharts();
+                renderSeverityGaugeChart();
+                renderAdvancedVisuals();
+                Object.values(charts).forEach(ch => ch && ch.resize && ch.resize());
+            }, 200);
+        }
+
+        // ======================== تهيئة النظام ========================
+        async function initDashboardSystem() {
+            const loaded = await loadAllYears();
+            if (!loaded) await initDefault();
+            rebuildYearSelector();
+            fullRefreshDashboard();
+            document.getElementById('yearSelector')?.addEventListener('change', e => setCurrentYear(e.target.value));
+            document.getElementById('addYearBtn')?.addEventListener('click', addNewYear);
+            document.getElementById('manualSaveBtn')?.addEventListener('click', manualSaveAllData);
+            document.getElementById('resetYearBtn')?.addEventListener('click', resetCurrentYear);
+            document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
+                let data = getCurrent();
+                if (!data) return;
+                let excel = [
+                    ['القسم/التاريخ', ...data.dates, 'مجموع القسم']
+                ];
+                for (let i = 0; i < data.departments.length; i++) excel.push([data.departments[i], ...data
+                    .dataMatrix[i], data.dataMatrix[i].reduce((a, b) => a + b, 0)
+                ]);
+                let dailyTot = new Array(data.dates.length).fill(0);
+                for (let r of data.dataMatrix)
+                    for (let c = 0; c < data.dates.length; c++) dailyTot[c] += r[c];
+                excel.push(['🏆 مجموع المجاميع', ...dailyTot, dailyTot.reduce((a, b) => a + b, 0)]);
+                let ws = XLSX.utils.aoa_to_sheet(excel);
+                let wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, `شكاوي_${currentYear}`);
+                XLSX.writeFile(wb, `تقرير_شكاوي_${currentYear}.xlsx`);
+                showToast('تم تصدير ملف Excel بنجاح', 'success');
+            });
+            document.getElementById('exportWordBtn')?.addEventListener('click', () => { exportToWord(); showToast('تم تجهيز تقرير Word بنجاح', 'success'); });
+            document.getElementById('addDepartmentBtn')?.addEventListener('click', addDepartmentToCurrent);
+            document.getElementById('addDateBtn')?.addEventListener('click', addDateToCurrent);
+            document.getElementById('quickSearchInput')?.addEventListener('input', (e) => {
+                currentSearchText = e.target.value.trim();
+                renderTable();
+            });
+            document.getElementById('severityFilter')?.addEventListener('change', (e) => {
+                currentRowSeverityFilter = e.target.value;
+                renderTable();
+            });
+            document.getElementById('scrollToTableBtn')?.addEventListener('click', () => {
+                document.getElementById('complaintsTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            document.getElementById('floatingTopBtn')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            document.getElementById('floatingPrintBtn')?.addEventListener('click', () => window.print());
+            if (window.complaintsClockTimer) clearInterval(window.complaintsClockTimer);
+            window.complaintsClockTimer = setInterval(updateLiveClock, 1000);
+            window.addEventListener('resize', () => { Object.values(charts).forEach(ch => ch && ch.resize &&
+                    ch.resize()); });
+        }
+
+        // ======================== تسجيل الدخول والخروج ========================
+        const VALID_USERNAME = "admin";
+        const VALID_PASSWORD = "123456";
+
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                sessionStorage.setItem('complaints_logged_in', 'true');
+                document.getElementById('loginError').classList.add('hidden');
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                await initDashboardSystem();
+                initTheme();
+                showToast('مرحباً بك، تم تسجيل الدخول بنجاح', 'success');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('complaints_logged_in');
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'flex';
+            yearlyData = {};
+            currentYear = "2024";
+            Object.values(charts).forEach(ch => { try { ch.dispose(); } catch (e) {} });
+            charts = { trend: null, bar: null, multi: null, heat: null, gauge: null, donut: null, radar: null };
+            showToast('تم تسجيل الخروج', 'info');
+        }
+
+        // ======================== ربط الأحداث ========================
+        document.getElementById('loginBtn')?.addEventListener('click', doLogin);
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('password')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin
+        (); });
+        document.getElementById('username')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin
+        (); });
+        document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
+
+        // ======================== التهيئة الأولية ========================
+        (async function bootComplaintsDashboard() {
+            if (sessionStorage.getItem('complaints_logged_in') === 'true') {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                await initDashboardSystem();
+                initTheme();
+            } else {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('dashboardSection').style.display = 'none';
+                initTheme();
+            }
+        })();
+    </script>
+</body>
+</html>
